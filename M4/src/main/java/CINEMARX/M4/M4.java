@@ -11,9 +11,9 @@ package CINEMARX.M4;
 public class M4 {
 
     /**
-     * @param args the command line arguments la puta madre que lo pario porque me duele tanto el culo
+     * @param args the command line arguments
      */ 
     public static void main(String args[]) {
-        // TODO code application logic here
+        System.out.println("serrano la concha de tu madre");
     }
 }
