@@ -14,6 +14,7 @@ public class M4 {
      * @param args the command line arguments
      */ 
     public static void main(String args[]) {
-        System.out.println("serrano la concha de tu madre");
+        System.out.println("serrano te amo");
+        
     }
 }
