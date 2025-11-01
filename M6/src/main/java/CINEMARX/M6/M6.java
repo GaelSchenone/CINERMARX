@@ -1,4 +1,4 @@
-package cinemarx;
+package CINEMARX.M6;
 //Tengo este codigo de java desde netbeans, (usandolo en sistema operativo ubuntu de linux) 
 //y quiero agregar funciones dentro de las pantallas que te muestran los botones de la barra lateral
 import javax.swing.*;
