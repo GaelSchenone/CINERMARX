@@ -1,10 +1,12 @@
 package CINEMARX.M6;
-//Tengo este codigo de java desde netbeans, (usandolo en sistema operativo ubuntu de linux) 
-//y quiero agregar funciones dentro de las pantallas que te muestran los botones de la barra lateral
+
 import javax.swing.*;
+import javax.swing.table.DefaultTableModel;
 import java.awt.*;
 import java.awt.event.*;
 import java.net.URL;
+import java.sql.*;
+import java.text.DecimalFormat;
 
 public class M6 extends JFrame {
     
@@ -20,8 +22,13 @@ public class M6 extends JFrame {
     private final Color BUTTON_HOVER_COLOR = Color.decode("#2B2B2B");
     private final Color TEXT_COLOR = new Color(220, 220, 220);
     private final Color FIELDTEXT_COLOR = new Color(120,120,120);
-    private final Color ACCENT_COLOR = new Color(239, 68, 68); // Rojo
+    private final Color ACCENT_COLOR = new Color(239, 68, 68);
     private final Color SECTION_TITLE_COLOR = new Color(200, 200, 200);
+    
+    // Configuración de base de datos
+    private final String DB_URL = "jdbc:mysql://localhost:3306/Cinemarx";
+    private final String DB_USER = "root";
+    private final String DB_PASSWORD = "12341234";
     
     public M6() {
         initComponents();
@@ -35,35 +42,222 @@ public class M6 extends JFrame {
         getContentPane().setBackground(BACKGROUND_COLOR);
         setLayout(new BorderLayout());
         
-        // Crear TopBar
         createTopBar();
-        
-        // Crear Sidebar
         createSidebar();
         
-        // Crear Panel de Contenido
         contentPanel = new JPanel();
         contentPanel.setBackground(BACKGROUND_COLOR);
         contentPanel.setLayout(new FlowLayout(FlowLayout.LEFT, 30, 30));
         add(contentPanel, BorderLayout.CENTER);
     }
     
+    private Connection getConnection() throws SQLException {
+        return DriverManager.getConnection(DB_URL, DB_USER, DB_PASSWORD);
+    }
+    
     private void showContent(String buttonName) {
-        // Limpiar el panel de contenido
         contentPanel.removeAll();
         
-        // Crear un panel contenedor vertical
+        if (buttonName.equals("Estadísticas de ocupación")) {
+            showEstadisticasOcupacion();
+        } else {
+            showDefaultContent(buttonName);
+        }
+        
+        contentPanel.revalidate();
+        contentPanel.repaint();
+    }
+    
+    private void showEstadisticasOcupacion() {
+        JPanel container = new JPanel();
+        container.setLayout(new BoxLayout(container, BoxLayout.Y_AXIS));
+        container.setBackground(BACKGROUND_COLOR);
+        container.setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20));
+        
+        // Título
+        JLabel titleLabel = new JLabel("Estadísticas de Ocupación");
+        titleLabel.setFont(new Font("Segoe UI", Font.BOLD, 24));
+        titleLabel.setForeground(TEXT_COLOR);
+        titleLabel.setAlignmentX(Component.LEFT_ALIGNMENT);
+        
+        // Panel para el ComboBox
+        JPanel comboPanel = new JPanel();
+        comboPanel.setLayout(new FlowLayout(FlowLayout.LEFT, 0, 10));
+        comboPanel.setBackground(BACKGROUND_COLOR);
+        comboPanel.setAlignmentX(Component.LEFT_ALIGNMENT);
+        
+        JLabel salaLabel = new JLabel("Seleccione una Sala: ");
+        salaLabel.setFont(new Font("Segoe UI", Font.PLAIN, 16));
+        salaLabel.setForeground(TEXT_COLOR);
+        
+        JComboBox<SalaItem> salaComboBox = new JComboBox<>();
+        salaComboBox.setFont(new Font("Segoe UI", Font.PLAIN, 14));
+        salaComboBox.setPreferredSize(new Dimension(200, 35));
+        salaComboBox.setBackground(new Color(50, 50, 50));
+        salaComboBox.setForeground(TEXT_COLOR);
+        
+        comboPanel.add(salaLabel);
+        comboPanel.add(salaComboBox);
+        
+        // Panel para la tabla de estadísticas
+        JPanel tablePanel = new JPanel(new BorderLayout());
+        tablePanel.setBackground(BACKGROUND_COLOR);
+        tablePanel.setAlignmentX(Component.LEFT_ALIGNMENT);
+        tablePanel.setMaximumSize(new Dimension(900, 400));
+        tablePanel.setPreferredSize(new Dimension(900, 400));
+        
+        // Crear tabla
+        String[] columnNames = {"ID Función", "Película", "Fecha", "Hora", "Butacas Ocupadas", "Total Butacas", "Ocupación %"};
+        DefaultTableModel tableModel = new DefaultTableModel(columnNames, 0) {
+            @Override
+            public boolean isCellEditable(int row, int column) {
+                return false;
+            }
+        };
+        
+        // Agregar la primera fila con los nombres de las columnas
+        Object[] headerRow = {"ID Función", "Película", "Fecha", "Hora", "Butacas Ocup.", "Total Butac.", "Ocupación %"};
+        tableModel.addRow(headerRow);
+        
+        JTable table = new JTable(tableModel);
+        // COLOR DE FONDO Y TEXTO DE LAS CELDAS DE LA TABLA
+        table.setFont(new Font("Segoe UI", Font.PLAIN, 14));
+        table.setForeground(TEXT_COLOR);  // Color del texto de las celdas (blanco)
+        table.setBackground(new Color(40, 40, 40));  // Color de fondo de las celdas (gris oscuro)
+        table.setGridColor(new Color(60, 60, 60));
+        table.setRowHeight(30);
+        
+        // OCULTAR EL ENCABEZADO DE LA TABLA
+        table.setTableHeader(null);
+        
+        JScrollPane scrollPane = new JScrollPane(table);
+        scrollPane.setBackground(BACKGROUND_COLOR);
+        scrollPane.getViewport().setBackground(new Color(40, 40, 40));
+        tablePanel.add(scrollPane, BorderLayout.CENTER);
+        
+        // Cargar salas en el ComboBox
+        cargarSalas(salaComboBox);
+        
+        // Listener para cambios en el ComboBox
+        salaComboBox.addActionListener(e -> {
+            SalaItem selectedSala = (SalaItem) salaComboBox.getSelectedItem();
+            if (selectedSala != null) {
+                cargarEstadisticasSala(selectedSala.getId(), tableModel);
+            }
+        });
+        
+        // Agregar componentes al contenedor
+        container.add(titleLabel);
+        container.add(Box.createRigidArea(new Dimension(0, 20)));
+        container.add(comboPanel);
+        container.add(Box.createRigidArea(new Dimension(0, 20)));
+        container.add(tablePanel);
+        
+        contentPanel.add(container);
+        
+        // Cargar datos iniciales si hay salas
+        if (salaComboBox.getItemCount() > 0) {
+            SalaItem firstSala = salaComboBox.getItemAt(0);
+            cargarEstadisticasSala(firstSala.getId(), tableModel);
+        }
+    }
+    
+    private void cargarSalas(JComboBox<SalaItem> comboBox) {
+        try (Connection conn = getConnection();
+             Statement stmt = conn.createStatement();
+             ResultSet rs = stmt.executeQuery("SELECT ID_Sala, Numero, TipoDeSala, CantButacas FROM Sala ORDER BY ID_Sala")) {
+            
+            while (rs.next()) {
+                int idSala = rs.getInt("ID_Sala");
+                int numero = rs.getInt("Numero");
+                String tipo = rs.getString("TipoDeSala");
+                int cantButacas = rs.getInt("CantButacas");
+                
+                comboBox.addItem(new SalaItem(idSala, numero, tipo, cantButacas));
+            }
+            
+        } catch (SQLException e) {
+            JOptionPane.showMessageDialog(this, 
+                "Error al cargar las salas: " + e.getMessage(), 
+                "Error de Base de Datos", 
+                JOptionPane.ERROR_MESSAGE);
+            e.printStackTrace();
+        }
+    }
+    
+    private void cargarEstadisticasSala(int idSala, DefaultTableModel tableModel) {
+        // Limpiar todas las filas excepto mantener el header como primera fila
+        tableModel.setRowCount(0);
+        
+        // Volver a agregar la fila de encabezado
+        Object[] headerRow = {"ID Función", "Película", "Fecha", "Hora", "Butacas Ocup.", "Total Butac.", "Ocupación %"};
+        tableModel.addRow(headerRow);
+        
+        DecimalFormat df = new DecimalFormat("#.##");
+        
+        String query = "SELECT f.ID_Funcion, p.Titulo, f.FechaFuncion, f.HoraFuncion, " +
+                       "s.CantButacas, COUNT(b.ID_Boleto) as ButacasOcupadas " +
+                       "FROM Funcion f " +
+                       "INNER JOIN Pelicula p ON f.ID_Pelicula = p.ID_Pelicula " +
+                       "INNER JOIN Sala s ON f.ID_Sala = s.ID_Sala " +
+                       "LEFT JOIN Boleto b ON f.ID_Funcion = b.ID_Funcion " +
+                       "WHERE f.ID_Sala = ? " +
+                       "GROUP BY f.ID_Funcion, p.Titulo, f.FechaFuncion, f.HoraFuncion, s.CantButacas " +
+                       "ORDER BY f.FechaFuncion DESC, f.HoraFuncion DESC";
+        
+        try (Connection conn = getConnection();
+             PreparedStatement pstmt = conn.prepareStatement(query)) {
+            
+            pstmt.setInt(1, idSala);
+            ResultSet rs = pstmt.executeQuery();
+            
+            while (rs.next()) {
+                int idFuncion = rs.getInt("ID_Funcion");
+                String titulo = rs.getString("Titulo");
+                String fecha = rs.getString("FechaFuncion");
+                String hora = rs.getString("HoraFuncion");
+                int cantButacas = rs.getInt("CantButacas");
+                int butacasOcupadas = rs.getInt("ButacasOcupadas");
+                
+                double porcentaje = (cantButacas > 0) ? (butacasOcupadas * 100.0 / cantButacas) : 0;
+                
+                Object[] row = {
+                    idFuncion,
+                    titulo,
+                    fecha,
+                    hora,
+                    butacasOcupadas,
+                    cantButacas,
+                    df.format(porcentaje) + "%"
+                };
+                
+                tableModel.addRow(row);
+            }
+            
+            if (tableModel.getRowCount() == 0) {
+                Object[] emptyRow = {"---", "No hay funciones para esta sala", "---", "---", "---", "---", "---"};
+                tableModel.addRow(emptyRow);
+            }
+            
+        } catch (SQLException e) {
+            JOptionPane.showMessageDialog(this, 
+                "Error al cargar estadísticas: " + e.getMessage(), 
+                "Error de Base de Datos", 
+                JOptionPane.ERROR_MESSAGE);
+            e.printStackTrace();
+        }
+    }
+    
+    private void showDefaultContent(String buttonName) {
         JPanel container = new JPanel();
         container.setLayout(new BoxLayout(container, BoxLayout.Y_AXIS));
         container.setBackground(BACKGROUND_COLOR);
         
-        // Crear label con el nombre del botón
         JLabel titleLabel = new JLabel(buttonName);
         titleLabel.setFont(new Font("Segoe UI", Font.BOLD, 24));
         titleLabel.setForeground(TEXT_COLOR);
         titleLabel.setAlignmentX(Component.LEFT_ALIGNMENT);
         
-        // Crear campo de texto
         JTextField textField = new JTextField(30);
         textField.setFont(new Font("Segoe UI", Font.PLAIN, 16));
         textField.setForeground(FIELDTEXT_COLOR);
@@ -76,17 +270,11 @@ public class M6 extends JFrame {
         textField.setMaximumSize(new Dimension(400, 40));
         textField.setAlignmentX(Component.LEFT_ALIGNMENT);
         
-        // Agregar componentes al contenedor
         container.add(titleLabel);
         container.add(Box.createRigidArea(new Dimension(0, 15)));
         container.add(textField);
         
-        // Agregar el contenedor al panel principal
         contentPanel.add(container);
-        
-        // Refrescar el panel
-        contentPanel.revalidate();
-        contentPanel.repaint();
     }
     
     private void createTopBar() {
@@ -94,21 +282,17 @@ public class M6 extends JFrame {
         topBarPanel.setBackground(TOPBAR_COLOR);
         topBarPanel.setPreferredSize(new Dimension(getWidth(), 80));
         
-        // Cargar imagen topbar completa
         try {
-            URL imgURL = getClass().getResource("/java/com/example/pruebas/resources/TOPBAR.png");
+            URL imgURL = getClass().getResource("/cinemarx/resources/TOPBAR.png");
             if (imgURL != null) {
                 ImageIcon icon = new ImageIcon(imgURL);
-                // Ajustar imagen al ancho completo manteniendo proporción
                 Image img = icon.getImage();
                 int originalWidth = icon.getIconWidth();
                 int originalHeight = icon.getIconHeight();
                 
-                // Calcular nueva altura manteniendo proporción
                 int newWidth = getWidth();
                 int newHeight = (originalHeight * newWidth) / originalWidth;
                 
-                // Si la altura calculada es mayor a 110, ajustar por altura
                 if (newHeight > 110) {
                     newHeight = 110;
                     newWidth = (originalWidth * newHeight) / originalHeight;
@@ -119,7 +303,6 @@ public class M6 extends JFrame {
                 imageLabel.setHorizontalAlignment(SwingConstants.CENTER);
                 topBarPanel.add(imageLabel, BorderLayout.CENTER);
             } else {
-                // Fallback si no encuentra la imagen
                 JLabel logoLabel = new JLabel("Panel Gestión - Imagen no encontrada");
                 logoLabel.setFont(new Font("Segoe UI", Font.BOLD, 24));
                 logoLabel.setForeground(TEXT_COLOR);
@@ -127,7 +310,6 @@ public class M6 extends JFrame {
                 topBarPanel.add(logoLabel, BorderLayout.CENTER);
             }
         } catch (Exception e) {
-            // Fallback en caso de error
             JLabel logoLabel = new JLabel("Panel Gestión - Error al cargar imagen");
             logoLabel.setFont(new Font("Segoe UI", Font.BOLD, 24));
             logoLabel.setForeground(TEXT_COLOR);
@@ -146,7 +328,6 @@ public class M6 extends JFrame {
         sidebarPanel.setPreferredSize(new Dimension(280, getHeight()));
         sidebarPanel.setBorder(BorderFactory.createEmptyBorder(20, 15, 20, 15));
         
-        // Sección Gestión
         addSectionTitle("Gestión");
         addMenuButton("Usuarios y Roles", "user.png");
         addMenuButton("Películas", "video.png");
@@ -155,7 +336,6 @@ public class M6 extends JFrame {
         
         addSeparator();
         
-        // Sección Reportes
         addSectionTitle("Reportes");
         addMenuButton("Estadísticas de ocupación", "Style=outline.png");
         addMenuButton("Ventas", "dollar-circle.png");
@@ -163,7 +343,6 @@ public class M6 extends JFrame {
         
         addSeparator();
         
-        // Sección Seguridad
         addSectionTitle("Seguridad");
         addMenuButton("Logs de acciones", "user.png");
         
@@ -193,15 +372,13 @@ public class M6 extends JFrame {
         button.setCursor(new Cursor(Cursor.HAND_CURSOR));
         button.setBorder(BorderFactory.createEmptyBorder(10, 15, 10, 15));
         
-        // Cargar y establecer el icono
         try {
             URL iconURL = getClass().getResource("/cinemarx/resources/" + iconFileName);
             if (iconURL != null) {
                 ImageIcon icon = new ImageIcon(iconURL);
-                // Redimensionar el icono a un tamaño pequeño (24x24 píxeles)
                 Image img = icon.getImage().getScaledInstance(24, 24, Image.SCALE_SMOOTH);
                 button.setIcon(new ImageIcon(img));
-                button.setIconTextGap(10); // Espacio entre el icono y el texto
+                button.setIconTextGap(10);
             } else {
                 System.out.println("No se encontró la imagen: " + iconFileName);
             }
@@ -210,7 +387,6 @@ public class M6 extends JFrame {
             e.printStackTrace();
         }
         
-        // Efecto hover
         button.addMouseListener(new MouseAdapter() {
             @Override
             public void mouseEntered(MouseEvent e) {
@@ -225,7 +401,6 @@ public class M6 extends JFrame {
             }
         });
         
-        // Action listener
         button.addActionListener(e -> {
             System.out.println("Clicked: " + text);
             showContent(text);
@@ -243,15 +418,37 @@ public class M6 extends JFrame {
         sidebarPanel.add(separator);
     }
     
+    // Clase auxiliar para items del ComboBox
+    class SalaItem {
+        private int id;
+        private int numero;
+        private String tipo;
+        private int cantButacas;
+        
+        public SalaItem(int id, int numero, String tipo, int cantButacas) {
+            this.id = id;
+            this.numero = numero;
+            this.tipo = tipo;
+            this.cantButacas = cantButacas;
+        }
+        
+        public int getId() {
+            return id;
+        }
+        
+        @Override
+        public String toString() {
+            return "Sala " + numero + " - " + tipo + " (" + cantButacas + " butacas)";
+        }
+    }
+    
     public static void main(String args[]) {
-        // Usar look and feel del sistema
         try {
             UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
         } catch (Exception e) {
             e.printStackTrace();
         }
         
-        // Crear y mostrar la ventana
         SwingUtilities.invokeLater(() -> {
             M6 frame = new M6();
             frame.setVisible(true);
