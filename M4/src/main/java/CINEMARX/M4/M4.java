@@ -20,5 +20,6 @@ public class M4 {
         System.out.println("Serrano sos muy forra");
         System.out.println("Serrano sos muy forra");
         System.out.println("Serrano sos muy forra");
+        pollas negras
     }
 }
