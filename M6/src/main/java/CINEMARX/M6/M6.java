@@ -25,14 +25,65 @@ public class M6 extends JFrame {
     private final Color ACCENT_COLOR = new Color(239, 68, 68);
     private final Color SECTION_TITLE_COLOR = new Color(200, 200, 200);
     
-    // Configuración de base de datos
+    // Configuración de base de datos - NUEVAS CREDENCIALES
     private final String DB_URL = "jdbc:mariadb://br1.aguilucho.ar:25584/Cinemarx";
     private final String DB_USER = "cnx_admin";
     private final String DB_PASSWORD = "CnxAdmin!620";
     
-
+    // Conexión persistente
+    private Connection connection;
+    
     public M6() {
-        initComponents();
+        try {
+            // Establecer conexión al inicializar
+            initDatabaseConnection();
+            initComponents();
+        } catch (SQLException e) {
+            JOptionPane.showMessageDialog(null,
+                "Error al conectar con la base de datos:\n" + e.getMessage(),
+                "Error de Conexión",
+                JOptionPane.ERROR_MESSAGE);
+            e.printStackTrace();
+            System.exit(1);
+        }
+    }
+    
+    /**
+     * Inicializa la conexión a la base de datos
+     */
+    private void initDatabaseConnection() throws SQLException {
+        try {
+            // Cargar el driver de MariaDB
+            Class.forName("org.mariadb.jdbc.Driver");
+            this.connection = DriverManager.getConnection(DB_URL, DB_USER, DB_PASSWORD);
+            System.out.println("Conexión a base de datos establecida correctamente");
+        } catch (ClassNotFoundException e) {
+            throw new SQLException("Driver de MariaDB no encontrado: " + e.getMessage());
+        }
+    }
+    
+    /**
+     * Obtiene la conexión actual o crea una nueva si está cerrada
+     */
+    private Connection getConnection() throws SQLException {
+        if (connection == null || connection.isClosed()) {
+            initDatabaseConnection();
+        }
+        return connection;
+    }
+    
+    /**
+     * Cierra la conexión a la base de datos
+     */
+    private void closeDatabaseConnection() {
+        try {
+            if (connection != null && !connection.isClosed()) {
+                connection.close();
+                System.out.println("Conexión a base de datos cerrada correctamente");
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
     }
     
     private void initComponents() {
@@ -43,6 +94,14 @@ public class M6 extends JFrame {
         getContentPane().setBackground(BACKGROUND_COLOR);
         setLayout(new BorderLayout());
         
+        // Agregar listener para cerrar la conexión al cerrar la ventana
+        addWindowListener(new java.awt.event.WindowAdapter() {
+            @Override
+            public void windowClosing(java.awt.event.WindowEvent e) {
+                closeDatabaseConnection();
+            }
+        });
+        
         createTopBar();
         createSidebar();
         
@@ -50,10 +109,6 @@ public class M6 extends JFrame {
         contentPanel.setBackground(BACKGROUND_COLOR);
         contentPanel.setLayout(new FlowLayout(FlowLayout.LEFT, 30, 30));
         add(contentPanel, BorderLayout.CENTER);
-    }
-    
-    private Connection getConnection() throws SQLException {
-        return DriverManager.getConnection(DB_URL, DB_USER, DB_PASSWORD);
     }
     
     private void showContent(String buttonName) {
@@ -164,8 +219,7 @@ public class M6 extends JFrame {
     }
     
     private void cargarSalas(JComboBox<SalaItem> comboBox) {
-        try (Connection conn = getConnection();
-             Statement stmt = conn.createStatement();
+        try (Statement stmt = getConnection().createStatement();
              ResultSet rs = stmt.executeQuery("SELECT ID_Sala, Numero, TipoDeSala, CantButacas FROM Sala ORDER BY ID_Sala")) {
             
             while (rs.next()) {
@@ -206,8 +260,7 @@ public class M6 extends JFrame {
                        "GROUP BY f.ID_Funcion, p.Titulo, f.FechaFuncion, f.HoraFuncion, s.CantButacas " +
                        "ORDER BY f.FechaFuncion DESC, f.HoraFuncion DESC";
         
-        try (Connection conn = getConnection();
-             PreparedStatement pstmt = conn.prepareStatement(query)) {
+        try (PreparedStatement pstmt = getConnection().prepareStatement(query)) {
             
             pstmt.setInt(1, idSala);
             ResultSet rs = pstmt.executeQuery();
@@ -235,7 +288,7 @@ public class M6 extends JFrame {
                 tableModel.addRow(row);
             }
             
-            if (tableModel.getRowCount() == 0) {
+            if (tableModel.getRowCount() == 1) { // Solo tiene el header
                 Object[] emptyRow = {"---", "No hay funciones para esta sala", "---", "---", "---", "---", "---"};
                 tableModel.addRow(emptyRow);
             }
