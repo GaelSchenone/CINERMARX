@@ -14,6 +14,6 @@ public class M2 {
     
     
     public static void main(String args[]) {
-        System.out.println("Laburando en que funcione");
+        System.out.println("Laburando para que funcione porque no entiendo nada :/");
     }
 }
