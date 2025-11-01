@@ -23,9 +23,9 @@ public class M4 {
                 
                 // Crear conexión a base de datos
                 // IMPORTANTE: Ajusta estos valores según tu configuración
-                String url = "jdbc:mariadb://br1.aguilucho.ar:25584/mod4_reservas_boletos";
-                String user = "mod4_reservas_boletos";
-                String password = "Cnx!M4";
+                String url = "jdbc:mariadb://br1.aguilucho.ar:25584/Cinemarx";
+                String user = "cnx_admin";
+                String password = "CnxAdmin!620";
                 
                 DatabaseService dbService = new DatabaseService(url, user, password);
                 
