@@ -6,6 +6,7 @@ import java.awt.event.*;
 import java.net.URL;
 import java.sql.*;
 import javax.imageio.ImageIO;
+import java.io.InputStream;
 import java.awt.image.BufferedImage;
 
 public class M6 extends JFrame {
@@ -153,31 +154,29 @@ public class M6 extends JFrame {
         topBarPanel.setPreferredSize(new Dimension(getWidth(), 80));
         
         try {
-            URL imgURL = getClass().getResource("/cinemarx/resources/TOPBAR.png");
-            if (imgURL != null) {
-                ImageIcon icon = new ImageIcon(imgURL);
-                Image img = icon.getImage();
-                int originalWidth = icon.getIconWidth();
-                int originalHeight = icon.getIconHeight();
-                
+            URL imgURL = new URL("https://gaelschenone.aguilucho.ar/source_cmx/index.php?preview=logos%2FCINEMARX%20imagotipo.png");
+            InputStream imageIn = imgURL.openStream();
+            BufferedImage originalImage = ImageIO.read(imageIn);
+            imageIn.close();
+
+            if (originalImage != null) {
+                int originalWidth = originalImage.getWidth();
+                int originalHeight = originalImage.getHeight();
+
                 int newWidth = getWidth();
                 int newHeight = (originalHeight * newWidth) / originalWidth;
-                
+
                 if (newHeight > 110) {
                     newHeight = 110;
                     newWidth = (originalWidth * newHeight) / originalHeight;
                 }
-                
-                Image scaledImg = img.getScaledInstance(newWidth, newHeight, Image.SCALE_SMOOTH);
+
+                Image scaledImg = originalImage.getScaledInstance(newWidth, newHeight, Image.SCALE_SMOOTH);
                 JLabel imageLabel = new JLabel(new ImageIcon(scaledImg));
                 imageLabel.setHorizontalAlignment(SwingConstants.CENTER);
                 topBarPanel.add(imageLabel, BorderLayout.CENTER);
             } else {
-                JLabel logoLabel = new JLabel("Panel Gestión - Imagen no encontrada");
-                logoLabel.setFont(new Font("Segoe UI", Font.BOLD, 24));
-                logoLabel.setForeground(TEXT_COLOR);
-                logoLabel.setHorizontalAlignment(SwingConstants.CENTER);
-                topBarPanel.add(logoLabel, BorderLayout.CENTER);
+                throw new Exception("La imagen no pudo ser leída.");
             }
         } catch (Exception e) {
             JLabel logoLabel = new JLabel("Panel Gestión - Error al cargar imagen");
