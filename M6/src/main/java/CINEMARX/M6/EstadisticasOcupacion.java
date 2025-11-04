@@ -23,7 +23,7 @@ public class EstadisticasOcupacion {
         container.setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20));
         
         // Título
-        JLabel titleLabel = new JLabel("Estadísticas de Ocupación");
+        JLabel titleLabel = new JLabel("Estadísticas");
         titleLabel.setFont(new Font("Segoe UI", Font.BOLD, 24));
         titleLabel.setForeground(M6.TEXT_COLOR);
         titleLabel.setAlignmentX(Component.LEFT_ALIGNMENT);

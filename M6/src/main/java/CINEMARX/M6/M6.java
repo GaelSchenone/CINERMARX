@@ -9,6 +9,7 @@ import javax.imageio.ImageIO;
 import java.io.InputStream;
 import java.awt.image.BufferedImage;
 
+
 public class M6 extends JFrame {
     
     private JPanel sidebarPanel;
@@ -103,7 +104,7 @@ public class M6 extends JFrame {
     private void showContent(String buttonName) {
         contentPanel.removeAll();
 
-        if (buttonName.equals("Estadísticas de ocupación")) {
+        if (buttonName.equals("Estadísticas")) {
             new EstadisticasOcupacion(this, contentPanel).mostrar();
         } else if (buttonName.equals("Ventas")) {
             new Ventas(this, contentPanel).mostrar();
@@ -163,18 +164,19 @@ public class M6 extends JFrame {
                 int originalWidth = originalImage.getWidth();
                 int originalHeight = originalImage.getHeight();
 
-                int newWidth = getWidth();
-                int newHeight = (originalHeight * newWidth) / originalWidth;
-
-                if (newHeight > 110) {
-                    newHeight = 110;
-                    newWidth = (originalWidth * newHeight) / originalHeight;
-                }
+                // Altura máxima con margen (topbar es 80, dejamos margen arriba y abajo)
+                int maxHeight = 50; // Reducido de 110 a 50 para dejar espacio
+                int newHeight = maxHeight;
+                int newWidth = (originalWidth * newHeight) / originalHeight;
 
                 Image scaledImg = originalImage.getScaledInstance(newWidth, newHeight, Image.SCALE_SMOOTH);
                 JLabel imageLabel = new JLabel(new ImageIcon(scaledImg));
-                imageLabel.setHorizontalAlignment(SwingConstants.CENTER);
-                topBarPanel.add(imageLabel, BorderLayout.CENTER);
+                imageLabel.setHorizontalAlignment(SwingConstants.LEFT);
+
+                // Agregar márgenes: 15px arriba, 15px abajo, 15px izquierda, 0px derecha
+                imageLabel.setBorder(BorderFactory.createEmptyBorder(15, 15, 15, 0));
+
+                topBarPanel.add(imageLabel, BorderLayout.WEST); // Cambié de CENTER a WEST
             } else {
                 throw new Exception("La imagen no pudo ser leída.");
             }
@@ -186,6 +188,8 @@ public class M6 extends JFrame {
             topBarPanel.add(logoLabel, BorderLayout.CENTER);
             e.printStackTrace();
         }
+
+add(topBarPanel, BorderLayout.NORTH);
         
         add(topBarPanel, BorderLayout.NORTH);
     }
@@ -198,21 +202,21 @@ public class M6 extends JFrame {
         sidebarPanel.setBorder(BorderFactory.createEmptyBorder(20, 15, 20, 15));
         
         addSectionTitle("Gestión");
-        addMenuButton("Usuarios y Roles", "user.png");
-        addMenuButton("Películas", "video.png");
-        addMenuButton("Personal", "staff.png");
+        addMenuButton("Usuarios y Roles", "https://gaelschenone.aguilucho.ar/source_cmx/index.php?preview=botones%2FM6%2Fuser.png");
+        addMenuButton("Películas", "https://gaelschenone.aguilucho.ar/source_cmx/index.php?preview=botones%2FM6%2Fvideo.png");
+        addMenuButton("Personal", "https://gaelschenone.aguilucho.ar/source_cmx/index.php?preview=botones%2FM6%2Fstaff.png");
         
         addSeparator();
         
         addSectionTitle("Reportes");
-        addMenuButton("Estadísticas de ocupación", "Style=outline.png");
-        addMenuButton("Ventas", "dollar-circle.png");
-        addMenuButton("ABM", "logs.png");
+        addMenuButton("Estadísticas", "https://gaelschenone.aguilucho.ar/source_cmx/index.php?preview=botones%2FM6%2FStyleoutline.png");
+        addMenuButton("Ventas", "https://gaelschenone.aguilucho.ar/source_cmx/index.php?preview=botones%2FM6%2Fdollar-circle.png");
+        addMenuButton("ABM", "https://gaelschenone.aguilucho.ar/source_cmx/index.php?preview=botones%2FM6%2Fabm.png");
         
         addSeparator();
         
         addSectionTitle("Seguridad");
-        addMenuButton("Logs de acciones", "user.png");
+        addMenuButton("Logs de acciones", "https://gaelschenone.aguilucho.ar/source_cmx/index.php?preview=botones%2FM6%2Flogs.png");
         
         add(sidebarPanel, BorderLayout.WEST);
     }
@@ -226,7 +230,7 @@ public class M6 extends JFrame {
         sidebarPanel.add(titleLabel);
     }
     
-    private void addMenuButton(String text, String iconFileName) {
+    private void addMenuButton(String text, String imageUrl) {
         JButton button = new JButton(text);
         button.setFont(new Font("Segoe UI", Font.PLAIN, 15));
         button.setForeground(TEXT_COLOR);
@@ -240,16 +244,20 @@ public class M6 extends JFrame {
         button.setCursor(new Cursor(Cursor.HAND_CURSOR));
         button.setBorder(BorderFactory.createEmptyBorder(10, 15, 10, 15));
         
+        // Cargar icono desde URL
         try {
-            URL iconURL = getClass().getResource("/cinemarx/resources/" + iconFileName);
-            if (iconURL != null) {
-                ImageIcon icon = new ImageIcon(iconURL);
-                Image img = icon.getImage().getScaledInstance(24, 24, Image.SCALE_SMOOTH);
-                button.setIcon(new ImageIcon(img));
+            URL iconURL = new URL(imageUrl);
+            InputStream iconIn = iconURL.openStream();
+            BufferedImage iconImage = ImageIO.read(iconIn);
+            iconIn.close();
+            
+            if (iconImage != null) {
+                Image scaledIcon = iconImage.getScaledInstance(24, 24, Image.SCALE_SMOOTH);
+                button.setIcon(new ImageIcon(scaledIcon));
                 button.setIconTextGap(10);
             }
         } catch (Exception e) {
-            System.out.println("Error al cargar el icono: " + iconFileName);
+            System.err.println("Error cargando icono: " + imageUrl);
             e.printStackTrace();
         }
         
