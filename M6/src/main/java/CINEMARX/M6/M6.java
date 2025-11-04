@@ -121,6 +121,8 @@ public class M6 extends JFrame {
             showVentas();
         } else if (buttonName.equals("ABM")) {
             showABM();
+        } else if (buttonName.equals("Personal")) {  // NUEVO CASO
+            showPersonal();
         } else {
             showDefaultContent(buttonName);
         }
@@ -536,219 +538,219 @@ public class M6 extends JFrame {
         }
     }
     private void showABM() {
-    JPanel container = new JPanel();
-    container.setLayout(new BoxLayout(container, BoxLayout.Y_AXIS));
-    container.setBackground(BACKGROUND_COLOR);
-    container.setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20));
-    
-    // Título principal
-    JLabel titleLabel = new JLabel("ABM - Alta, Baja, Modificación");
-    titleLabel.setFont(new Font("Segoe UI", Font.BOLD, 24));
-    titleLabel.setForeground(TEXT_COLOR);
-    titleLabel.setAlignmentX(Component.LEFT_ALIGNMENT);
-    
-    // Panel de selección
-    JPanel selectionPanel = new JPanel();
-    selectionPanel.setLayout(new FlowLayout(FlowLayout.LEFT, 15, 10));
-    selectionPanel.setBackground(BACKGROUND_COLOR);
-    selectionPanel.setAlignmentX(Component.LEFT_ALIGNMENT);
-    
-    JLabel operacionLabel = new JLabel("Operación:");
-    operacionLabel.setFont(new Font("Segoe UI", Font.PLAIN, 16));
-    operacionLabel.setForeground(TEXT_COLOR);
-    
-    String[] operaciones = {"Alta", "Baja", "Modificación"};
-    JComboBox<String> operacionComboBox = new JComboBox<>(operaciones);
-    operacionComboBox.setFont(new Font("Segoe UI", Font.PLAIN, 14));
-    operacionComboBox.setPreferredSize(new Dimension(150, 35));
-    operacionComboBox.setBackground(new Color(50, 50, 50));
-    operacionComboBox.setForeground(TEXT_COLOR);
-    
-    JLabel entidadLabel = new JLabel("Entidad:");
-    entidadLabel.setFont(new Font("Segoe UI", Font.PLAIN, 16));
-    entidadLabel.setForeground(TEXT_COLOR);
-    
-    String[] entidades = {"Función", "Película"};
-    JComboBox<String> entidadComboBox = new JComboBox<>(entidades);
-    entidadComboBox.setFont(new Font("Segoe UI", Font.PLAIN, 14));
-    entidadComboBox.setPreferredSize(new Dimension(150, 35));
-    entidadComboBox.setBackground(new Color(50, 50, 50));
-    entidadComboBox.setForeground(TEXT_COLOR);
-    
-    selectionPanel.add(operacionLabel);
-    selectionPanel.add(operacionComboBox);
-    selectionPanel.add(Box.createRigidArea(new Dimension(20, 0)));
-    selectionPanel.add(entidadLabel);
-    selectionPanel.add(entidadComboBox);
-    
-    // Panel de contenido dinámico
-    JPanel dynamicPanel = new JPanel();
-    dynamicPanel.setLayout(new BoxLayout(dynamicPanel, BoxLayout.Y_AXIS));
-    dynamicPanel.setBackground(BACKGROUND_COLOR);
-    dynamicPanel.setAlignmentX(Component.LEFT_ALIGNMENT);
-    
-    // Listener para cambios en los ComboBox
-    ActionListener updateListener = e -> {
-        String operacion = (String) operacionComboBox.getSelectedItem();
-        String entidad = (String) entidadComboBox.getSelectedItem();
-        actualizarPanelABM(dynamicPanel, operacion, entidad);
-    };
-    
-    operacionComboBox.addActionListener(updateListener);
-    entidadComboBox.addActionListener(updateListener);
-    
-    // Agregar componentes al contenedor principal
-    container.add(titleLabel);
-    container.add(Box.createRigidArea(new Dimension(0, 20)));
-    container.add(selectionPanel);
-    container.add(Box.createRigidArea(new Dimension(0, 20)));
-    container.add(dynamicPanel);
-    
-    contentPanel.add(container);
-    
-    // Cargar contenido inicial
-    actualizarPanelABM(dynamicPanel, "Alta", "Función");
-}
+        JPanel container = new JPanel();
+        container.setLayout(new BoxLayout(container, BoxLayout.Y_AXIS));
+        container.setBackground(BACKGROUND_COLOR);
+        container.setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20));
 
-private void actualizarPanelABM(JPanel dynamicPanel, String operacion, String entidad) {
-    dynamicPanel.removeAll();
-    
-    if (operacion.equals("Alta")) {
-        if (entidad.equals("Función")) {
-            mostrarAltaFuncion(dynamicPanel);
-        } else {
-            mostrarAltaPelicula(dynamicPanel);
-        }
-    } else if (operacion.equals("Baja")) {
-        if (entidad.equals("Función")) {
-            mostrarBajaFuncion(dynamicPanel);
-        } else {
-            mostrarBajaPelicula(dynamicPanel);
-        }
-    } else if (operacion.equals("Modificación")) {
-        if (entidad.equals("Función")) {
-            mostrarModificacionFuncion(dynamicPanel);
-        } else {
-            mostrarModificacionPelicula(dynamicPanel);
-        }
+        // Título principal
+        JLabel titleLabel = new JLabel("ABM - Alta, Baja, Modificación");
+        titleLabel.setFont(new Font("Segoe UI", Font.BOLD, 24));
+        titleLabel.setForeground(TEXT_COLOR);
+        titleLabel.setAlignmentX(Component.LEFT_ALIGNMENT);
+
+        // Panel de selección
+        JPanel selectionPanel = new JPanel();
+        selectionPanel.setLayout(new FlowLayout(FlowLayout.LEFT, 15, 10));
+        selectionPanel.setBackground(BACKGROUND_COLOR);
+        selectionPanel.setAlignmentX(Component.LEFT_ALIGNMENT);
+
+        JLabel operacionLabel = new JLabel("Operación:");
+        operacionLabel.setFont(new Font("Segoe UI", Font.PLAIN, 16));
+        operacionLabel.setForeground(TEXT_COLOR);
+
+        String[] operaciones = {"Alta", "Baja", "Modificación"};
+        JComboBox<String> operacionComboBox = new JComboBox<>(operaciones);
+        operacionComboBox.setFont(new Font("Segoe UI", Font.PLAIN, 14));
+        operacionComboBox.setPreferredSize(new Dimension(150, 35));
+        operacionComboBox.setBackground(new Color(50, 50, 50));
+        operacionComboBox.setForeground(TEXT_COLOR);
+
+        JLabel entidadLabel = new JLabel("Entidad:");
+        entidadLabel.setFont(new Font("Segoe UI", Font.PLAIN, 16));
+        entidadLabel.setForeground(TEXT_COLOR);
+
+        String[] entidades = {"Función", "Película"};
+        JComboBox<String> entidadComboBox = new JComboBox<>(entidades);
+        entidadComboBox.setFont(new Font("Segoe UI", Font.PLAIN, 14));
+        entidadComboBox.setPreferredSize(new Dimension(150, 35));
+        entidadComboBox.setBackground(new Color(50, 50, 50));
+        entidadComboBox.setForeground(TEXT_COLOR);
+
+        selectionPanel.add(operacionLabel);
+        selectionPanel.add(operacionComboBox);
+        selectionPanel.add(Box.createRigidArea(new Dimension(20, 0)));
+        selectionPanel.add(entidadLabel);
+        selectionPanel.add(entidadComboBox);
+
+        // Panel de contenido dinámico
+        JPanel dynamicPanel = new JPanel();
+        dynamicPanel.setLayout(new BoxLayout(dynamicPanel, BoxLayout.Y_AXIS));
+        dynamicPanel.setBackground(BACKGROUND_COLOR);
+        dynamicPanel.setAlignmentX(Component.LEFT_ALIGNMENT);
+
+        // Listener para cambios en los ComboBox
+        ActionListener updateListener = e -> {
+            String operacion = (String) operacionComboBox.getSelectedItem();
+            String entidad = (String) entidadComboBox.getSelectedItem();
+            actualizarPanelABM(dynamicPanel, operacion, entidad);
+        };
+
+        operacionComboBox.addActionListener(updateListener);
+        entidadComboBox.addActionListener(updateListener);
+
+        // Agregar componentes al contenedor principal
+        container.add(titleLabel);
+        container.add(Box.createRigidArea(new Dimension(0, 20)));
+        container.add(selectionPanel);
+        container.add(Box.createRigidArea(new Dimension(0, 20)));
+        container.add(dynamicPanel);
+
+        contentPanel.add(container);
+
+        // Cargar contenido inicial
+        actualizarPanelABM(dynamicPanel, "Alta", "Función");
     }
-    
-    dynamicPanel.revalidate();
-    dynamicPanel.repaint();
-}
+
+    private void actualizarPanelABM(JPanel dynamicPanel, String operacion, String entidad) {
+        dynamicPanel.removeAll();
+
+        if (operacion.equals("Alta")) {
+            if (entidad.equals("Función")) {
+                mostrarAltaFuncion(dynamicPanel);
+            } else {
+                mostrarAltaPelicula(dynamicPanel);
+            }
+        } else if (operacion.equals("Baja")) {
+            if (entidad.equals("Función")) {
+                mostrarBajaFuncion(dynamicPanel);
+            } else {
+                mostrarBajaPelicula(dynamicPanel);
+            }
+        } else if (operacion.equals("Modificación")) {
+            if (entidad.equals("Función")) {
+                mostrarModificacionFuncion(dynamicPanel);
+            } else {
+                mostrarModificacionPelicula(dynamicPanel);
+            }
+        }
+
+        dynamicPanel.revalidate();
+        dynamicPanel.repaint();
+    }
 
 // ==================== ALTA FUNCIÓN ====================
-private void mostrarAltaFuncion(JPanel panel) {
-    JPanel formPanel = new JPanel();
-    formPanel.setLayout(new GridBagLayout());
-    formPanel.setBackground(new Color(45, 45, 45));
-    formPanel.setBorder(BorderFactory.createCompoundBorder(
-        BorderFactory.createLineBorder(new Color(80, 80, 80), 1),
-        BorderFactory.createEmptyBorder(20, 20, 20, 20)
-    ));
-    formPanel.setMaximumSize(new Dimension(700, 400));
-    formPanel.setAlignmentX(Component.LEFT_ALIGNMENT);
-    
-    GridBagConstraints gbc = new GridBagConstraints();
-    gbc.insets = new Insets(8, 8, 8, 8);
-    gbc.fill = GridBagConstraints.HORIZONTAL;
-    
-    // Hora
-    gbc.gridx = 0; gbc.gridy = 0;
-    formPanel.add(createLabel("Hora (HH:MM:SS):"), gbc);
-    gbc.gridx = 1;
-    JTextField horaField = createTextField();
-    formPanel.add(horaField, gbc);
-    
-    // Fecha
-    gbc.gridx = 0; gbc.gridy = 1;
-    formPanel.add(createLabel("Fecha (YYYY-MM-DD):"), gbc);
-    gbc.gridx = 1;
-    JTextField fechaField = createTextField();
-    formPanel.add(fechaField, gbc);
-    
-    // Estado
-    gbc.gridx = 0; gbc.gridy = 2;
-    formPanel.add(createLabel("Estado:"), gbc);
-    gbc.gridx = 1;
-    JTextField estadoField = createTextField();
-    formPanel.add(estadoField, gbc);
-    
-    // Película
-    gbc.gridx = 0; gbc.gridy = 3;
-    formPanel.add(createLabel("Película:"), gbc);
-    gbc.gridx = 1;
-    JComboBox<PeliculaItem> peliculaCombo = new JComboBox<>();
-    styleComboBox(peliculaCombo);
-    cargarPeliculas(peliculaCombo);
-    formPanel.add(peliculaCombo, gbc);
-    
-    // Sala
-    gbc.gridx = 0; gbc.gridy = 4;
-    formPanel.add(createLabel("Sala:"), gbc);
-    gbc.gridx = 1;
-    JComboBox<SalaItem> salaCombo = new JComboBox<>();
-    styleComboBox(salaCombo);
-    cargarSalas(salaCombo);
-    formPanel.add(salaCombo, gbc);
-    
-    // Cartelera
-    gbc.gridx = 0; gbc.gridy = 5;
-    formPanel.add(createLabel("Cartelera:"), gbc);
-    gbc.gridx = 1;
-    JComboBox<CarteleraItem> carteleraCombo = new JComboBox<>();
-    styleComboBox(carteleraCombo);
-    cargarCarteleras(carteleraCombo);
-    formPanel.add(carteleraCombo, gbc);
-    
-    // Botón
-    gbc.gridx = 0; gbc.gridy = 6; gbc.gridwidth = 2;
-    JButton guardarBtn = createButton("Guardar Función");
-    formPanel.add(guardarBtn, gbc);
-    
-    guardarBtn.addActionListener(e -> {
-        try {
-            String hora = horaField.getText().trim();
-            String fecha = fechaField.getText().trim();
-            String estado = estadoField.getText().trim();
-            PeliculaItem pelicula = (PeliculaItem) peliculaCombo.getSelectedItem();
-            SalaItem sala = (SalaItem) salaCombo.getSelectedItem();
-            CarteleraItem cartelera = (CarteleraItem) carteleraCombo.getSelectedItem();
-            
-            if (hora.isEmpty() || fecha.isEmpty() || pelicula == null || sala == null || cartelera == null) {
-                JOptionPane.showMessageDialog(this, "Por favor complete todos los campos obligatorios", 
+    private void mostrarAltaFuncion(JPanel panel) {
+        JPanel formPanel = new JPanel();
+        formPanel.setLayout(new GridBagLayout());
+        formPanel.setBackground(new Color(45, 45, 45));
+        formPanel.setBorder(BorderFactory.createCompoundBorder(
+            BorderFactory.createLineBorder(new Color(80, 80, 80), 1),
+            BorderFactory.createEmptyBorder(20, 20, 20, 20)
+        ));
+        formPanel.setMaximumSize(new Dimension(700, 400));
+        formPanel.setAlignmentX(Component.LEFT_ALIGNMENT);
+
+        GridBagConstraints gbc = new GridBagConstraints();
+        gbc.insets = new Insets(8, 8, 8, 8);
+        gbc.fill = GridBagConstraints.HORIZONTAL;
+
+        // Hora
+        gbc.gridx = 0; gbc.gridy = 0;
+        formPanel.add(createLabel("Hora (HH:MM:SS):"), gbc);
+        gbc.gridx = 1;
+        JTextField horaField = createTextField();
+        formPanel.add(horaField, gbc);
+
+        // Fecha
+        gbc.gridx = 0; gbc.gridy = 1;
+        formPanel.add(createLabel("Fecha (YYYY-MM-DD):"), gbc);
+        gbc.gridx = 1;
+        JTextField fechaField = createTextField();
+        formPanel.add(fechaField, gbc);
+
+        // Estado
+        gbc.gridx = 0; gbc.gridy = 2;
+        formPanel.add(createLabel("Estado:"), gbc);
+        gbc.gridx = 1;
+        JTextField estadoField = createTextField();
+        formPanel.add(estadoField, gbc);
+
+        // Película
+        gbc.gridx = 0; gbc.gridy = 3;
+        formPanel.add(createLabel("Película:"), gbc);
+        gbc.gridx = 1;
+        JComboBox<PeliculaItem> peliculaCombo = new JComboBox<>();
+        styleComboBox(peliculaCombo);
+        cargarPeliculas(peliculaCombo);
+        formPanel.add(peliculaCombo, gbc);
+
+        // Sala
+        gbc.gridx = 0; gbc.gridy = 4;
+        formPanel.add(createLabel("Sala:"), gbc);
+        gbc.gridx = 1;
+        JComboBox<SalaItem> salaCombo = new JComboBox<>();
+        styleComboBox(salaCombo);
+        cargarSalas(salaCombo);
+        formPanel.add(salaCombo, gbc);
+
+        // Cartelera
+        gbc.gridx = 0; gbc.gridy = 5;
+        formPanel.add(createLabel("Cartelera:"), gbc);
+        gbc.gridx = 1;
+        JComboBox<CarteleraItem> carteleraCombo = new JComboBox<>();
+        styleComboBox(carteleraCombo);
+        cargarCarteleras(carteleraCombo);
+        formPanel.add(carteleraCombo, gbc);
+
+        // Botón
+        gbc.gridx = 0; gbc.gridy = 6; gbc.gridwidth = 2;
+        JButton guardarBtn = createButton("Guardar Función");
+        formPanel.add(guardarBtn, gbc);
+
+        guardarBtn.addActionListener(e -> {
+            try {
+                String hora = horaField.getText().trim();
+                String fecha = fechaField.getText().trim();
+                String estado = estadoField.getText().trim();
+                PeliculaItem pelicula = (PeliculaItem) peliculaCombo.getSelectedItem();
+                SalaItem sala = (SalaItem) salaCombo.getSelectedItem();
+                CarteleraItem cartelera = (CarteleraItem) carteleraCombo.getSelectedItem();
+
+                if (hora.isEmpty() || fecha.isEmpty() || pelicula == null || sala == null || cartelera == null) {
+                    JOptionPane.showMessageDialog(this, "Por favor complete todos los campos obligatorios", 
+                        "Error", JOptionPane.ERROR_MESSAGE);
+                    return;
+                }
+
+                String query = "INSERT INTO Funcion (HoraFuncion, FechaFuncion, Estado, ID_Pelicula, ID_Sala, ID_Cartelera) " +
+                              "VALUES (?, ?, ?, ?, ?, ?)";
+
+                try (PreparedStatement pstmt = getConnection().prepareStatement(query)) {
+                    pstmt.setString(1, hora);
+                    pstmt.setString(2, fecha);
+                    pstmt.setString(3, estado.isEmpty() ? null : estado);
+                    pstmt.setInt(4, pelicula.getId());
+                    pstmt.setInt(5, sala.getId());
+                    pstmt.setInt(6, cartelera.getId());
+
+                    pstmt.executeUpdate();
+                    JOptionPane.showMessageDialog(this, "Función creada exitosamente", "Éxito", JOptionPane.INFORMATION_MESSAGE);
+
+                    // Limpiar campos
+                    horaField.setText("");
+                    fechaField.setText("");
+                    estadoField.setText("");
+                }
+            } catch (SQLException ex) {
+                JOptionPane.showMessageDialog(this, "Error al crear función: " + ex.getMessage(), 
                     "Error", JOptionPane.ERROR_MESSAGE);
-                return;
+                ex.printStackTrace();
             }
-            
-            String query = "INSERT INTO Funcion (HoraFuncion, FechaFuncion, Estado, ID_Pelicula, ID_Sala, ID_Cartelera) " +
-                          "VALUES (?, ?, ?, ?, ?, ?)";
-            
-            try (PreparedStatement pstmt = getConnection().prepareStatement(query)) {
-                pstmt.setString(1, hora);
-                pstmt.setString(2, fecha);
-                pstmt.setString(3, estado.isEmpty() ? null : estado);
-                pstmt.setInt(4, pelicula.getId());
-                pstmt.setInt(5, sala.getId());
-                pstmt.setInt(6, cartelera.getId());
-                
-                pstmt.executeUpdate();
-                JOptionPane.showMessageDialog(this, "Función creada exitosamente", "Éxito", JOptionPane.INFORMATION_MESSAGE);
-                
-                // Limpiar campos
-                horaField.setText("");
-                fechaField.setText("");
-                estadoField.setText("");
-            }
-        } catch (SQLException ex) {
-            JOptionPane.showMessageDialog(this, "Error al crear función: " + ex.getMessage(), 
-                "Error", JOptionPane.ERROR_MESSAGE);
-            ex.printStackTrace();
-        }
-    });
-    
-    panel.add(formPanel);
-}
+        });
+
+        panel.add(formPanel);
+    }
 
 // ==================== ALTA PELÍCULA ====================
     private void mostrarAltaPelicula(JPanel panel) {
@@ -811,13 +813,17 @@ private void mostrarAltaFuncion(JPanel panel) {
                     return;
                 }
 
-                String query = "INSERT INTO Pelicula (Titulo, Genero, ClasificacionEdad, Estado) VALUES (?, ?, ?, ?)";
+                // GENERAR NOMBRE DE IMAGEN AUTOMÁTICAMENTE
+                String imagenNombre = generarNombreImagen(titulo);
+
+                String query = "INSERT INTO Pelicula (Titulo, Genero, ClasificacionEdad, Estado, Imagen) VALUES (?, ?, ?, ?, ?)";
 
                 try (PreparedStatement pstmt = getConnection().prepareStatement(query)) {
                     pstmt.setString(1, titulo);
                     pstmt.setString(2, genero.isEmpty() ? null : genero);
                     pstmt.setString(3, clasificacion.isEmpty() ? null : clasificacion);
                     pstmt.setString(4, estado.isEmpty() ? null : estado);
+                    pstmt.setString(5, imagenNombre); // AGREGAR IMAGEN
 
                     pstmt.executeUpdate();
                     JOptionPane.showMessageDialog(this, "Película creada exitosamente", "Éxito", JOptionPane.INFORMATION_MESSAGE);
@@ -1187,14 +1193,25 @@ private void mostrarAltaFuncion(JPanel panel) {
             }
 
             try {
-                String query = "UPDATE Pelicula SET Titulo = ?, Genero = ?, ClasificacionEdad = ?, Estado = ? WHERE ID_Pelicula = ?";
+                String nuevoTitulo = tituloField.getText().trim();
+
+                if (nuevoTitulo.isEmpty()) {
+                    JOptionPane.showMessageDialog(this, "El título es obligatorio", "Error", JOptionPane.ERROR_MESSAGE);
+                    return;
+                }
+
+                // GENERAR NUEVO NOMBRE DE IMAGEN BASADO EN EL NUEVO TÍTULO
+                String nuevaImagen = generarNombreImagen(nuevoTitulo);
+
+                String query = "UPDATE Pelicula SET Titulo = ?, Genero = ?, ClasificacionEdad = ?, Estado = ?, Imagen = ? WHERE ID_Pelicula = ?";
 
                 try (PreparedStatement pstmt = getConnection().prepareStatement(query)) {
-                    pstmt.setString(1, tituloField.getText().trim());
+                    pstmt.setString(1, nuevoTitulo);
                     pstmt.setString(2, generoField.getText().trim());
                     pstmt.setString(3, clasificacionField.getText().trim());
                     pstmt.setString(4, estadoField.getText().trim());
-                    pstmt.setInt(5, pelicula.getId());
+                    pstmt.setString(5, nuevaImagen); // ACTUALIZAR IMAGEN
+                    pstmt.setInt(6, pelicula.getId());
 
                     pstmt.executeUpdate();
                     JOptionPane.showMessageDialog(this, "Película actualizada exitosamente", "Éxito", JOptionPane.INFORMATION_MESSAGE);
@@ -1212,7 +1229,103 @@ private void mostrarAltaFuncion(JPanel panel) {
 
         panel.add(formPanel);
     }
+    private void showPersonal() {
+        JPanel container = new JPanel();
+        container.setLayout(new BoxLayout(container, BoxLayout.Y_AXIS));
+        container.setBackground(BACKGROUND_COLOR);
+        container.setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20));
 
+        // Título principal
+        JLabel titleLabel = new JLabel("Gestión de Personal");
+        titleLabel.setFont(new Font("Segoe UI", Font.BOLD, 24));
+        titleLabel.setForeground(TEXT_COLOR);
+        titleLabel.setAlignmentX(Component.LEFT_ALIGNMENT);
+
+        // Panel para la tabla
+        JPanel tablePanel = new JPanel(new BorderLayout());
+        tablePanel.setBackground(BACKGROUND_COLOR);
+        tablePanel.setAlignmentX(Component.LEFT_ALIGNMENT);
+        tablePanel.setMaximumSize(new Dimension(900, 400));
+        tablePanel.setPreferredSize(new Dimension(900, 400));
+
+        // Crear tabla
+        String[] columnNames = {"DNI", "Nombre", "Apellido", "Rol"};
+        DefaultTableModel tableModel = new DefaultTableModel(columnNames, 0) {
+            @Override
+            public boolean isCellEditable(int row, int column) {
+                return false;
+            }
+        };
+
+        // Agregar la primera fila con los nombres de las columnas
+        Object[] headerRow = {"DNI", "Nombre", "Apellido", "Rol"};
+        tableModel.addRow(headerRow);
+
+        JTable table = new JTable(tableModel);
+        table.setFont(new Font("Segoe UI", Font.PLAIN, 14));
+        table.setForeground(TEXT_COLOR);
+        table.setBackground(new Color(40, 40, 40));
+        table.setGridColor(new Color(60, 60, 60));
+        table.setRowHeight(30);
+        table.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+
+        // OCULTAR EL ENCABEZADO DE LA TABLA
+        table.setTableHeader(null);
+
+        JScrollPane scrollPane = new JScrollPane(table);
+        scrollPane.setBackground(BACKGROUND_COLOR);
+        scrollPane.getViewport().setBackground(new Color(40, 40, 40));
+        tablePanel.add(scrollPane, BorderLayout.CENTER);
+
+        // Panel de botones
+        JPanel buttonPanel = new JPanel();
+        buttonPanel.setLayout(new FlowLayout(FlowLayout.LEFT, 15, 10));
+        buttonPanel.setBackground(BACKGROUND_COLOR);
+        buttonPanel.setAlignmentX(Component.LEFT_ALIGNMENT);
+
+        JButton altaBtn = createButton("Alta");
+        JButton bajaBtn = createButton("Baja");
+        JButton modificacionBtn = createButton("Modificación");
+
+        buttonPanel.add(altaBtn);
+        buttonPanel.add(bajaBtn);
+        buttonPanel.add(modificacionBtn);
+
+        // Listeners de botones
+        altaBtn.addActionListener(e -> abrirVentanaAltaPersonal(tableModel));
+
+        bajaBtn.addActionListener(e -> {
+            int selectedRow = table.getSelectedRow();
+            if (selectedRow == -1) {
+                JOptionPane.showMessageDialog(this, "Seleccione un registro para eliminar", 
+                    "Error", JOptionPane.WARNING_MESSAGE);
+                return;
+            }
+            eliminarPersonal(table, tableModel, selectedRow);
+        });
+
+        modificacionBtn.addActionListener(e -> {
+            int selectedRow = table.getSelectedRow();
+            if (selectedRow == -1) {
+                JOptionPane.showMessageDialog(this, "Seleccione un registro para modificar", 
+                    "Error", JOptionPane.WARNING_MESSAGE);
+                return;
+            }
+            abrirVentanaModificacionPersonal(table, tableModel, selectedRow);
+        });
+
+        // Agregar componentes al contenedor
+        container.add(titleLabel);
+        container.add(Box.createRigidArea(new Dimension(0, 20)));
+        container.add(tablePanel);
+        container.add(Box.createRigidArea(new Dimension(0, 15)));
+        container.add(buttonPanel);
+
+        contentPanel.add(container);
+
+        // Cargar datos
+        cargarPersonal(tableModel);
+    }
     // ==================== MÉTODOS AUXILIARES ====================
 
     private void cargarDatosFuncion(int idFuncion, JTextField horaField, JTextField fechaField, 
@@ -1287,6 +1400,24 @@ private void mostrarAltaFuncion(JPanel panel) {
                 "Error", JOptionPane.ERROR_MESSAGE);
             e.printStackTrace();
         }
+    }
+    private String generarNombreImagen(String titulo) {
+       if (titulo == null || titulo.trim().isEmpty()) {
+           return "default.png";
+       }
+
+       // Reemplazar espacios por guiones bajos
+       String nombreImagen = titulo.trim().replace(" ", "_");
+
+       // Eliminar caracteres especiales problemáticos
+       nombreImagen = nombreImagen.replaceAll("[:\\\\/*?\"<>|]", "");
+
+       // Agregar extensión .png
+       if (!nombreImagen.toLowerCase().endsWith(".png")) {
+           nombreImagen += ".png";
+       }
+
+       return nombreImagen;
     }
 
     private void cargarPeliculas(JComboBox<PeliculaItem> comboBox) {
@@ -1373,7 +1504,556 @@ private void mostrarAltaFuncion(JPanel panel) {
         comboBox.setForeground(TEXT_COLOR);
         comboBox.setPreferredSize(new Dimension(300, 35));
     }
+    
+    private void cargarPersonal(DefaultTableModel tableModel) {
+        // Limpiar todas las filas excepto mantener el header como primera fila
+        tableModel.setRowCount(0);
 
+        // Volver a agregar la fila de encabezado
+        Object[] headerRow = {"DNI", "Nombre", "Apellido", "Rol"};
+        tableModel.addRow(headerRow);
+
+        try {
+            // Cargar administradores primero
+            String queryAdmin = "SELECT u.DNI, u.Nombre, u.Apellido " +
+                               "FROM Administrador a " +
+                               "INNER JOIN Usuario u ON a.DNI = u.DNI " +
+                               "ORDER BY u.Apellido, u.Nombre";
+
+            try (Statement stmt = getConnection().createStatement();
+                 ResultSet rs = stmt.executeQuery(queryAdmin)) {
+
+                while (rs.next()) {
+                    Object[] row = {
+                        rs.getInt("DNI"),
+                        rs.getString("Nombre"),
+                        rs.getString("Apellido"),
+                        "Administrador"
+                    };
+                    tableModel.addRow(row);
+                }
+            }
+
+            // Cargar empleados después
+            String queryEmp = "SELECT u.DNI, u.Nombre, u.Apellido " +
+                             "FROM Empleado e " +
+                             "INNER JOIN Usuario u ON e.DNI = u.DNI " +
+                             "ORDER BY u.Apellido, u.Nombre";
+
+            try (Statement stmt = getConnection().createStatement();
+                 ResultSet rs = stmt.executeQuery(queryEmp)) {
+
+                while (rs.next()) {
+                    Object[] row = {
+                        rs.getInt("DNI"),
+                        rs.getString("Nombre"),
+                        rs.getString("Apellido"),
+                        "Empleado"
+                    };
+                    tableModel.addRow(row);
+                }
+            }
+
+        } catch (SQLException e) {
+            JOptionPane.showMessageDialog(this, 
+                "Error al cargar personal: " + e.getMessage(), 
+                "Error de Base de Datos", 
+                JOptionPane.ERROR_MESSAGE);
+            e.printStackTrace();
+        }
+    }
+    private void abrirVentanaAltaPersonal(DefaultTableModel tableModel) {
+        // Crear ventana emergente
+        JDialog dialog = new JDialog(this, "Alta de Personal", true);
+        dialog.setSize(500, 550);
+        dialog.setLocationRelativeTo(this);
+        dialog.setLayout(new BorderLayout());
+        dialog.getContentPane().setBackground(BACKGROUND_COLOR);
+
+        // Panel superior con imagen TOPBAR
+        JPanel topPanel = new JPanel(new BorderLayout());
+        topPanel.setBackground(TOPBAR_COLOR);
+        topPanel.setPreferredSize(new Dimension(500, 80));
+
+        try {
+            URL imgURL = getClass().getResource("/cinemarx/resources/TOPBAR.png");
+            if (imgURL != null) {
+                ImageIcon icon = new ImageIcon(imgURL);
+                Image img = icon.getImage();
+                Image scaledImg = img.getScaledInstance(500, 80, Image.SCALE_SMOOTH);
+                JLabel imageLabel = new JLabel(new ImageIcon(scaledImg));
+                imageLabel.setHorizontalAlignment(SwingConstants.CENTER);
+                topPanel.add(imageLabel, BorderLayout.CENTER);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        dialog.add(topPanel, BorderLayout.NORTH);
+
+        // Panel central con formulario
+        JPanel formPanel = new JPanel();
+        formPanel.setLayout(new GridBagLayout());
+        formPanel.setBackground(BACKGROUND_COLOR);
+        formPanel.setBorder(BorderFactory.createEmptyBorder(20, 30, 20, 30));
+
+        GridBagConstraints gbc = new GridBagConstraints();
+        gbc.insets = new Insets(10, 10, 10, 10);
+        gbc.fill = GridBagConstraints.HORIZONTAL;
+
+        // DNI
+        gbc.gridx = 0; gbc.gridy = 0;
+        formPanel.add(createLabel("DNI:"), gbc);
+        gbc.gridx = 1;
+        JTextField dniField = createTextField();
+        formPanel.add(dniField, gbc);
+
+        // Nombre
+        gbc.gridx = 0; gbc.gridy = 1;
+        formPanel.add(createLabel("Nombre:"), gbc);
+        gbc.gridx = 1;
+        JTextField nombreField = createTextField();
+        formPanel.add(nombreField, gbc);
+
+        // Apellido
+        gbc.gridx = 0; gbc.gridy = 2;
+        formPanel.add(createLabel("Apellido:"), gbc);
+        gbc.gridx = 1;
+        JTextField apellidoField = createTextField();
+        formPanel.add(apellidoField, gbc);
+
+        // Fecha de Nacimiento
+        gbc.gridx = 0; gbc.gridy = 3;
+        formPanel.add(createLabel("Fecha Nac. (YYYY-MM-DD):"), gbc);
+        gbc.gridx = 1;
+        JTextField fechaNacField = createTextField();
+        formPanel.add(fechaNacField, gbc);
+
+        // Rol - Botones de selección exclusiva
+        gbc.gridx = 0; gbc.gridy = 4;
+        formPanel.add(createLabel("Rol:"), gbc);
+
+        gbc.gridx = 1;
+        JPanel rolPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 10, 0));
+        rolPanel.setBackground(BACKGROUND_COLOR);
+
+        ButtonGroup rolGroup = new ButtonGroup();
+        JRadioButton empleadoRadio = new JRadioButton("Empleado");
+        JRadioButton adminRadio = new JRadioButton("Administrador");
+
+        empleadoRadio.setFont(new Font("Segoe UI", Font.PLAIN, 14));
+        empleadoRadio.setForeground(TEXT_COLOR);
+        empleadoRadio.setBackground(BACKGROUND_COLOR);
+        empleadoRadio.setSelected(true);
+
+        adminRadio.setFont(new Font("Segoe UI", Font.PLAIN, 14));
+        adminRadio.setForeground(TEXT_COLOR);
+        adminRadio.setBackground(BACKGROUND_COLOR);
+
+        rolGroup.add(empleadoRadio);
+        rolGroup.add(adminRadio);
+        rolPanel.add(empleadoRadio);
+        rolPanel.add(adminRadio);
+
+        formPanel.add(rolPanel, gbc);
+
+        // Panel adicional para administrador (ID_Cine)
+        gbc.gridx = 0; gbc.gridy = 5;
+        JLabel cineLabel = createLabel("Cine:");
+        cineLabel.setVisible(false);
+        formPanel.add(cineLabel, gbc);
+
+        gbc.gridx = 1;
+        JComboBox<CineItem> cineCombo = new JComboBox<>();
+        styleComboBox(cineCombo);
+        cineCombo.setVisible(false);
+        cargarCines(cineCombo);
+        formPanel.add(cineCombo, gbc);
+
+        // Listener para mostrar/ocultar campo de cine
+        adminRadio.addActionListener(e -> {
+            cineLabel.setVisible(true);
+            cineCombo.setVisible(true);
+            dialog.revalidate();
+        });
+
+        empleadoRadio.addActionListener(e -> {
+            cineLabel.setVisible(false);
+            cineCombo.setVisible(false);
+            dialog.revalidate();
+        });
+
+        dialog.add(formPanel, BorderLayout.CENTER);
+
+        // Panel inferior con botones
+        JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 15, 15));
+        buttonPanel.setBackground(BACKGROUND_COLOR);
+
+        JButton guardarBtn = createButton("Guardar");
+        JButton cancelarBtn = createButton("Cancelar");
+        cancelarBtn.setBackground(new Color(100, 100, 100));
+
+        buttonPanel.add(guardarBtn);
+        buttonPanel.add(cancelarBtn);
+
+        dialog.add(buttonPanel, BorderLayout.SOUTH);
+
+        // Listener del botón Guardar
+        guardarBtn.addActionListener(e -> {
+            try {
+                String dniStr = dniField.getText().trim();
+                String nombre = nombreField.getText().trim();
+                String apellido = apellidoField.getText().trim();
+                String fechaNac = fechaNacField.getText().trim();
+
+                if (dniStr.isEmpty() || nombre.isEmpty() || apellido.isEmpty() || fechaNac.isEmpty()) {
+                    JOptionPane.showMessageDialog(dialog, "Complete todos los campos", 
+                        "Error", JOptionPane.ERROR_MESSAGE);
+                    return;
+                }
+
+                int dni = Integer.parseInt(dniStr);
+                boolean esAdmin = adminRadio.isSelected();
+
+                if (esAdmin && cineCombo.getSelectedItem() == null) {
+                    JOptionPane.showMessageDialog(dialog, "Seleccione un cine para el administrador", 
+                        "Error", JOptionPane.ERROR_MESSAGE);
+                    return;
+                }
+
+                // Insertar usuario primero
+                String queryUsuario = "INSERT INTO Usuario (DNI, FechaNac, Nombre, Apellido) VALUES (?, ?, ?, ?)";
+
+                try (PreparedStatement pstmt = getConnection().prepareStatement(queryUsuario)) {
+                    pstmt.setInt(1, dni);
+                    pstmt.setString(2, fechaNac);
+                    pstmt.setString(3, nombre);
+                    pstmt.setString(4, apellido);
+                    pstmt.executeUpdate();
+                }
+
+                // Insertar empleado o administrador
+                if (esAdmin) {
+                    CineItem cine = (CineItem) cineCombo.getSelectedItem();
+                    String queryAdmin = "INSERT INTO Administrador (DNI, ID_Cine) VALUES (?, ?)";
+                    try (PreparedStatement pstmt = getConnection().prepareStatement(queryAdmin)) {
+                        pstmt.setInt(1, dni);
+                        pstmt.setInt(2, cine.getId());
+                        pstmt.executeUpdate();
+                    }
+                } else {
+                    String queryEmp = "INSERT INTO Empleado (DNI) VALUES (?)";
+                    try (PreparedStatement pstmt = getConnection().prepareStatement(queryEmp)) {
+                        pstmt.setInt(1, dni);
+                        pstmt.executeUpdate();
+                    }
+                }
+
+                JOptionPane.showMessageDialog(dialog, 
+                    (esAdmin ? "Administrador" : "Empleado") + " creado exitosamente", 
+                    "Éxito", JOptionPane.INFORMATION_MESSAGE);
+
+                cargarPersonal(tableModel);
+                dialog.dispose();
+
+            } catch (NumberFormatException ex) {
+                JOptionPane.showMessageDialog(dialog, "El DNI debe ser un número válido", 
+                    "Error", JOptionPane.ERROR_MESSAGE);
+            } catch (SQLException ex) {
+                JOptionPane.showMessageDialog(dialog, "Error al crear registro: " + ex.getMessage(), 
+                    "Error", JOptionPane.ERROR_MESSAGE);
+                ex.printStackTrace();
+            }
+        });
+
+        cancelarBtn.addActionListener(e -> dialog.dispose());
+
+        dialog.setVisible(true);
+    }
+    private void cargarCines(JComboBox<CineItem> comboBox) {
+        try (Statement stmt = getConnection().createStatement();
+             ResultSet rs = stmt.executeQuery("SELECT ID_Cine, Nombre FROM Cine ORDER BY Nombre")) {
+
+            while (rs.next()) {
+                comboBox.addItem(new CineItem(rs.getInt("ID_Cine"), rs.getString("Nombre")));
+            }
+        } catch (SQLException e) {
+            JOptionPane.showMessageDialog(this, "Error al cargar cines: " + e.getMessage(), 
+                "Error", JOptionPane.ERROR_MESSAGE);
+            e.printStackTrace();
+        }
+    }
+    
+    private void abrirVentanaModificacionPersonal(JTable table, DefaultTableModel tableModel, int selectedRow) {
+        // Obtener datos de la fila seleccionada
+        int dni = (int) tableModel.getValueAt(selectedRow, 0);
+        String nombreActual = (String) tableModel.getValueAt(selectedRow, 1);
+        String apellidoActual = (String) tableModel.getValueAt(selectedRow, 2);
+        String rolActual = (String) tableModel.getValueAt(selectedRow, 3);
+
+        // Crear ventana emergente (MÁS ANCHA Y MÁS ALTA)
+        JDialog dialog = new JDialog(this, "Modificación de Personal", true);
+        dialog.setSize(700, 500);  // Cambiado de 500x400 a 700x500
+        dialog.setLocationRelativeTo(this);
+        dialog.setLayout(new BorderLayout());
+        dialog.getContentPane().setBackground(BACKGROUND_COLOR);
+
+        // Panel superior con imagen TOPBAR
+        JPanel topPanel = new JPanel(new BorderLayout());
+        topPanel.setBackground(TOPBAR_COLOR);
+        topPanel.setPreferredSize(new Dimension(700, 80));
+
+        try {
+            URL imgURL = getClass().getResource("/cinemarx/resources/TOPBAR.png");
+            if (imgURL != null) {
+                ImageIcon icon = new ImageIcon(imgURL);
+                Image img = icon.getImage();
+                Image scaledImg = img.getScaledInstance(700, 80, Image.SCALE_SMOOTH);
+                JLabel imageLabel = new JLabel(new ImageIcon(scaledImg));
+                imageLabel.setHorizontalAlignment(SwingConstants.CENTER);
+                topPanel.add(imageLabel, BorderLayout.CENTER);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        dialog.add(topPanel, BorderLayout.NORTH);
+
+        // Panel central con formulario
+        JPanel formPanel = new JPanel();
+        formPanel.setLayout(new GridBagLayout());
+        formPanel.setBackground(BACKGROUND_COLOR);
+        formPanel.setBorder(BorderFactory.createEmptyBorder(30, 50, 30, 50));
+
+        GridBagConstraints gbc = new GridBagConstraints();
+        gbc.insets = new Insets(12, 12, 12, 12);
+        gbc.fill = GridBagConstraints.HORIZONTAL;
+
+        // Mostrar rol (no editable)
+        gbc.gridx = 0; gbc.gridy = 0;
+        gbc.weightx = 0.3;
+        formPanel.add(createLabel("Rol:"), gbc);
+        gbc.gridx = 1;
+        gbc.weightx = 0.7;
+        JLabel rolLabel = createLabel(rolActual);
+        rolLabel.setForeground(ACCENT_COLOR);
+        formPanel.add(rolLabel, gbc);
+
+        // DNI (AHORA EDITABLE)
+        gbc.gridx = 0; gbc.gridy = 1;
+        gbc.weightx = 0.3;
+        formPanel.add(createLabel("DNI:"), gbc);
+        gbc.gridx = 1;
+        gbc.weightx = 0.7;
+        JTextField dniField = createTextFieldWide();  // Campo más ancho
+        dniField.setText(String.valueOf(dni));
+        formPanel.add(dniField, gbc);
+
+        // Nombre
+        gbc.gridx = 0; gbc.gridy = 2;
+        gbc.weightx = 0.3;
+        formPanel.add(createLabel("Nombre:"), gbc);
+        gbc.gridx = 1;
+        gbc.weightx = 0.7;
+        JTextField nombreField = createTextFieldWide();
+        nombreField.setText(nombreActual);
+        formPanel.add(nombreField, gbc);
+
+        // Apellido
+        gbc.gridx = 0; gbc.gridy = 3;
+        gbc.weightx = 0.3;
+        formPanel.add(createLabel("Apellido:"), gbc);
+        gbc.gridx = 1;
+        gbc.weightx = 0.7;
+        JTextField apellidoField = createTextFieldWide();
+        apellidoField.setText(apellidoActual);
+        formPanel.add(apellidoField, gbc);
+
+        // Fecha de Nacimiento
+        gbc.gridx = 0; gbc.gridy = 4;
+        gbc.weightx = 0.3;
+        formPanel.add(createLabel("Fecha Nac. (YYYY-MM-DD):"), gbc);
+        gbc.gridx = 1;
+        gbc.weightx = 0.7;
+        JTextField fechaNacField = createTextFieldWide();
+        formPanel.add(fechaNacField, gbc);
+
+        // Cargar fecha de nacimiento actual
+        try {
+            String queryFecha = "SELECT FechaNac FROM Usuario WHERE DNI = ?";
+            try (PreparedStatement pstmt = getConnection().prepareStatement(queryFecha)) {
+                pstmt.setInt(1, dni);
+                ResultSet rs = pstmt.executeQuery();
+                if (rs.next()) {
+                    fechaNacField.setText(rs.getString("FechaNac"));
+                }
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+
+        dialog.add(formPanel, BorderLayout.CENTER);
+
+        // Panel inferior con botones
+        JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 20, 20));
+        buttonPanel.setBackground(BACKGROUND_COLOR);
+
+        JButton actualizarBtn = createButton("Actualizar");
+        JButton cancelarBtn = createButton("Cancelar");
+        cancelarBtn.setBackground(new Color(100, 100, 100));
+
+        buttonPanel.add(actualizarBtn);
+        buttonPanel.add(cancelarBtn);
+
+        dialog.add(buttonPanel, BorderLayout.SOUTH);
+
+        // Listener del botón Actualizar
+        actualizarBtn.addActionListener(e -> {
+            try {
+                String nuevoDniStr = dniField.getText().trim();
+                String nuevoNombre = nombreField.getText().trim();
+                String nuevoApellido = apellidoField.getText().trim();
+                String nuevaFechaNac = fechaNacField.getText().trim();
+
+                if (nuevoDniStr.isEmpty() || nuevoNombre.isEmpty() || nuevoApellido.isEmpty() || nuevaFechaNac.isEmpty()) {
+                    JOptionPane.showMessageDialog(dialog, "Complete todos los campos", 
+                        "Error", JOptionPane.ERROR_MESSAGE);
+                    return;
+                }
+
+                int nuevoDni = Integer.parseInt(nuevoDniStr);
+
+                // Si el DNI cambió, verificar que no exista
+                if (nuevoDni != dni) {
+                    String queryCheck = "SELECT COUNT(*) as count FROM Usuario WHERE DNI = ?";
+                    try (PreparedStatement pstmt = getConnection().prepareStatement(queryCheck)) {
+                        pstmt.setInt(1, nuevoDni);
+                        ResultSet rs = pstmt.executeQuery();
+                        if (rs.next() && rs.getInt("count") > 0) {
+                            JOptionPane.showMessageDialog(dialog, "El DNI " + nuevoDni + " ya existe", 
+                                "Error", JOptionPane.ERROR_MESSAGE);
+                            return;
+                        }
+                    }
+
+                    // Actualizar DNI en tabla específica primero
+                    if (rolActual.equals("Administrador")) {
+                        String queryUpdateAdmin = "UPDATE Administrador SET DNI = ? WHERE DNI = ?";
+                        try (PreparedStatement pstmt = getConnection().prepareStatement(queryUpdateAdmin)) {
+                            pstmt.setInt(1, nuevoDni);
+                            pstmt.setInt(2, dni);
+                            pstmt.executeUpdate();
+                        }
+                    } else {
+                        String queryUpdateEmp = "UPDATE Empleado SET DNI = ? WHERE DNI = ?";
+                        try (PreparedStatement pstmt = getConnection().prepareStatement(queryUpdateEmp)) {
+                            pstmt.setInt(1, nuevoDni);
+                            pstmt.setInt(2, dni);
+                            pstmt.executeUpdate();
+                        }
+                    }
+                }
+
+                // Actualizar usuario (con el DNI nuevo o viejo según corresponda)
+                String queryUpdate = "UPDATE Usuario SET DNI = ?, Nombre = ?, Apellido = ?, FechaNac = ? WHERE DNI = ?";
+
+                try (PreparedStatement pstmt = getConnection().prepareStatement(queryUpdate)) {
+                    pstmt.setInt(1, nuevoDni);
+                    pstmt.setString(2, nuevoNombre);
+                    pstmt.setString(3, nuevoApellido);
+                    pstmt.setString(4, nuevaFechaNac);
+                    pstmt.setInt(5, dni);
+                    pstmt.executeUpdate();
+                }
+
+                JOptionPane.showMessageDialog(dialog, "Datos actualizados exitosamente", 
+                    "Éxito", JOptionPane.INFORMATION_MESSAGE);
+
+                cargarPersonal(tableModel);
+                dialog.dispose();
+
+            } catch (NumberFormatException ex) {
+                JOptionPane.showMessageDialog(dialog, "El DNI debe ser un número válido", 
+                    "Error", JOptionPane.ERROR_MESSAGE);
+            } catch (SQLException ex) {
+                JOptionPane.showMessageDialog(dialog, "Error al actualizar: " + ex.getMessage(), 
+                    "Error", JOptionPane.ERROR_MESSAGE);
+                ex.printStackTrace();
+            }
+        });
+
+        cancelarBtn.addActionListener(e -> dialog.dispose());
+
+        dialog.setVisible(true);
+    }
+    
+    private void eliminarPersonal(JTable table, DefaultTableModel tableModel, int selectedRow) {
+        // Obtener datos de la fila seleccionada
+        int dni = (int) tableModel.getValueAt(selectedRow, 0);
+        String nombre = (String) tableModel.getValueAt(selectedRow, 1);
+        String apellido = (String) tableModel.getValueAt(selectedRow, 2);
+        String rol = (String) tableModel.getValueAt(selectedRow, 3);
+
+        // Mensaje de confirmación
+        int confirm = JOptionPane.showConfirmDialog(this, 
+            "¿Seguro que desea eliminar este registro?\n\n" +
+            "DNI: " + dni + "\n" +
+            "Nombre: " + nombre + " " + apellido + "\n" +
+            "Rol: " + rol,
+            "Confirmar eliminación", 
+            JOptionPane.YES_NO_OPTION,
+            JOptionPane.WARNING_MESSAGE);
+
+        if (confirm == JOptionPane.YES_OPTION) {
+            try {
+                // Primero eliminar de la tabla específica (Empleado o Administrador)
+                String queryDelete;
+                if (rol.equals("Administrador")) {
+                    queryDelete = "DELETE FROM Administrador WHERE DNI = ?";
+                } else {
+                    queryDelete = "DELETE FROM Empleado WHERE DNI = ?";
+                }
+
+                try (PreparedStatement pstmt = getConnection().prepareStatement(queryDelete)) {
+                    pstmt.setInt(1, dni);
+                    pstmt.executeUpdate();
+                }
+
+                // Luego eliminar de Usuario (CASCADE eliminará las referencias)
+                String queryDeleteUsuario = "DELETE FROM Usuario WHERE DNI = ?";
+                try (PreparedStatement pstmt = getConnection().prepareStatement(queryDeleteUsuario)) {
+                    pstmt.setInt(1, dni);
+                    pstmt.executeUpdate();
+                }
+
+                JOptionPane.showMessageDialog(this, 
+                    rol + " eliminado exitosamente", 
+                    "Éxito", 
+                    JOptionPane.INFORMATION_MESSAGE);
+
+                cargarPersonal(tableModel);
+
+            } catch (SQLException e) {
+                JOptionPane.showMessageDialog(this, 
+                    "Error al eliminar: " + e.getMessage(), 
+                    "Error de Base de Datos", 
+                    JOptionPane.ERROR_MESSAGE);
+                e.printStackTrace();
+            }
+        }
+    }
+    private JTextField createTextFieldWide() {
+        JTextField textField = new JTextField(35);  // Más ancho (era 20)
+        textField.setFont(new Font("Segoe UI", Font.PLAIN, 14));
+        textField.setForeground(FIELDTEXT_COLOR);
+        textField.setBackground(new Color(50, 50, 50));
+        textField.setCaretColor(FIELDTEXT_COLOR);
+        textField.setBorder(BorderFactory.createCompoundBorder(
+            BorderFactory.createLineBorder(new Color(80, 80, 80), 1),
+            BorderFactory.createEmptyBorder(5, 8, 5, 8)
+        ));
+        return textField;
+    }
     // ==================== CLASES AUXILIARES ====================
 
     class PeliculaItem {
@@ -1498,6 +2178,24 @@ private void mostrarAltaFuncion(JPanel panel) {
             e.printStackTrace();
         }
     }
+    class CineItem {
+        private int id;
+        private String nombre;
+
+        public CineItem(int id, String nombre) {
+            this.id = id;
+            this.nombre = nombre;
+        }
+
+        public int getId() {
+            return id;
+        }
+
+        @Override
+        public String toString() {
+            return nombre;
+        }
+    }
     
     private void showDefaultContent(String buttonName) {
         JPanel container = new JPanel();
@@ -1582,7 +2280,6 @@ private void mostrarAltaFuncion(JPanel panel) {
         addSectionTitle("Gestión");
         addMenuButton("Usuarios y Roles", "user.png");
         addMenuButton("Películas", "video.png");
-        addMenuButton("Salas", "sala.png");
         addMenuButton("Personal", "staff.png");
         
         addSeparator();
