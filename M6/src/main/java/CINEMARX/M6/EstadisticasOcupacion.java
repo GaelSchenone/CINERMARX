@@ -23,16 +23,19 @@ public class EstadisticasOcupacion {
     }
 
     public void mostrar() {
-        JPanel container = new JPanel();
-        container.setLayout(new BoxLayout(container, BoxLayout.Y_AXIS));
-        container.setBackground(M6.BACKGROUND_COLOR);
-        container.setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20));
+        // Panel principal con BoxLayout (vertical)
+        JPanel mainPanel = new JPanel();
+        mainPanel.setLayout(new BoxLayout(mainPanel, BoxLayout.Y_AXIS));
+        mainPanel.setBackground(M6.BACKGROUND_COLOR);
+        mainPanel.setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20));
 
         // --- Título principal ---
         JLabel titleLabel = new JLabel("Estadísticas");
         titleLabel.setFont(new Font("Segoe UI", Font.BOLD, 24));
         titleLabel.setForeground(M6.TEXT_COLOR);
         titleLabel.setAlignmentX(Component.LEFT_ALIGNMENT);
+        mainPanel.add(titleLabel);
+        mainPanel.add(Box.createVerticalStrut(15));
 
         // --- Panel del ComboBox ---
         JPanel comboPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 0, 10));
@@ -51,50 +54,58 @@ public class EstadisticasOcupacion {
 
         comboPanel.add(salaLabel);
         comboPanel.add(salaComboBox);
+        mainPanel.add(comboPanel);
 
-        // --- Subtítulo para la tabla ---
-        JLabel datosLabel = new JLabel("Datos Función");
-        datosLabel.setFont(new Font("Segoe UI", Font.BOLD, 18));
+        // --- Subtítulo de tabla ---
+        JLabel datosLabel = new JLabel("Datos de Función");
+        datosLabel.setFont(new Font("Segoe UI", Font.BOLD, 16));
         datosLabel.setForeground(M6.TEXT_COLOR);
         datosLabel.setAlignmentX(Component.LEFT_ALIGNMENT);
-        datosLabel.setBorder(BorderFactory.createEmptyBorder(10, 0, 5, 0));
+        mainPanel.add(datosLabel);
+        mainPanel.add(Box.createVerticalStrut(10));
 
-        // --- Panel de tabla ---
-        JPanel tablePanel = new JPanel(new BorderLayout());
-        tablePanel.setBackground(M6.BACKGROUND_COLOR);
-        tablePanel.setAlignmentX(Component.LEFT_ALIGNMENT);
-        tablePanel.setMaximumSize(new Dimension(700, 200));
-        tablePanel.setPreferredSize(new Dimension(700, 200));
+        // --- Tabla ---
+        String[] columnNames = {"ID Función", "Película", "Fecha", "Hora", "Butacas Ocup.", "Total Butac."};
+        DefaultTableModel tableModel = new DefaultTableModel(columnNames, 0);
+        JTable tabla = new JTable(tableModel);
+        tabla.setBackground(Color.WHITE);
+        tabla.setForeground(Color.BLACK);
+        tabla.setRowHeight(25);
 
-        DefaultTableModel tableModel = new DefaultTableModel();
-        JTable table = new JTable(tableModel);
-        JScrollPane scrollPane = new JScrollPane(table);
-        tablePanel.add(scrollPane, BorderLayout.CENTER);
+        JScrollPane tableScrollPane = new JScrollPane(tabla);
+        tableScrollPane.setPreferredSize(new Dimension(700, 200));
+        mainPanel.add(tableScrollPane);
+        mainPanel.add(Box.createVerticalStrut(20));
 
-        // --- Subtítulo para el gráfico ---
-        JLabel graficoLabel = new JLabel("Estadísticas de Función");
-        graficoLabel.setFont(new Font("Segoe UI", Font.BOLD, 18));
-        graficoLabel.setForeground(M6.TEXT_COLOR);
-        graficoLabel.setAlignmentX(Component.LEFT_ALIGNMENT);
-        graficoLabel.setBorder(BorderFactory.createEmptyBorder(20, 0, 5, 0));
+        // --- Subtítulo de gráfico ---
+        JLabel estadisticasLabel = new JLabel("Estadísticas de Función");
+        estadisticasLabel.setFont(new Font("Segoe UI", Font.BOLD, 16));
+        estadisticasLabel.setForeground(M6.TEXT_COLOR);
+        estadisticasLabel.setAlignmentX(Component.LEFT_ALIGNMENT);
+        mainPanel.add(estadisticasLabel);
+        mainPanel.add(Box.createVerticalStrut(10));
 
         // --- Panel del gráfico ---
         JPanel graficoPanel = new JPanel(new BorderLayout());
         graficoPanel.setBackground(M6.BACKGROUND_COLOR);
-        graficoPanel.setPreferredSize(new Dimension(600, 300));
-        graficoPanel.setAlignmentX(Component.LEFT_ALIGNMENT);
+        graficoPanel.setPreferredSize(new Dimension(700, 400));
+        mainPanel.add(graficoPanel);
 
-        // --- Agregar componentes al contenedor ---
-        container.add(titleLabel);
-        container.add(Box.createVerticalStrut(10));
-        container.add(comboPanel);
-        container.add(Box.createVerticalStrut(10));
-        container.add(datosLabel);
-        container.add(tablePanel);
-        container.add(graficoLabel);
-        container.add(graficoPanel);
+        // --- Scroll principal ---
+        JScrollPane scrollPane = new JScrollPane(mainPanel);
+        scrollPane.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_ALWAYS); // siempre visible
+        scrollPane.setHorizontalScrollBarPolicy(JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
+        scrollPane.getVerticalScrollBar().setUnitIncrement(16);
+        scrollPane.setBorder(BorderFactory.createEmptyBorder());
 
-        // Cargar salas en el ComboBox
+        // --- Personalización del scrollbar (opcional, estilo oscuro) ---
+        scrollPane.getVerticalScrollBar().setUI(new javax.swing.plaf.basic.BasicScrollBarUI() {
+            @Override
+            protected void configureScrollBarColors() {
+                this.thumbColor = new Color(80, 80, 80);
+                this.trackColor = new Color(30, 30, 30);
+            }
+        });
         cargarSalas(salaComboBox);
 
         // Listener del ComboBox
@@ -104,9 +115,10 @@ public class EstadisticasOcupacion {
                 cargarEstadisticasSala(salaSeleccionada.getId(), tableModel, graficoPanel);
             }
         });
-
+        // --- Integración en el panel principal de la interfaz ---
         contentPanel.removeAll();
-        contentPanel.add(container, BorderLayout.CENTER);
+        contentPanel.setLayout(new BorderLayout());
+        contentPanel.add(scrollPane, BorderLayout.CENTER);
         contentPanel.revalidate();
         contentPanel.repaint();
     }

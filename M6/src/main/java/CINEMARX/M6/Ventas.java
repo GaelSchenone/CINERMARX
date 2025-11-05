@@ -16,28 +16,37 @@ public class Ventas {
     }
     
     public void mostrar() {
-        JPanel container = new JPanel();
-        container.setLayout(new BoxLayout(container, BoxLayout.Y_AXIS));
-        container.setBackground(M6.BACKGROUND_COLOR);
-        container.setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20));
+        // Panel principal con BoxLayout (vertical)
+        JPanel mainPanel = new JPanel();
+        mainPanel.setLayout(new BoxLayout(mainPanel, BoxLayout.Y_AXIS));
+        mainPanel.setBackground(M6.BACKGROUND_COLOR);
+        mainPanel.setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20));
 
         // Título principal
         JLabel titleLabel = new JLabel("Ventas");
         titleLabel.setFont(new Font("Segoe UI", Font.BOLD, 24));
         titleLabel.setForeground(M6.TEXT_COLOR);
         titleLabel.setAlignmentX(Component.LEFT_ALIGNMENT);
+        mainPanel.add(titleLabel);
+        mainPanel.add(Box.createRigidArea(new Dimension(0, 20)));
 
         // Panel de ventas totales
         JPanel ventasTotalesPanel = createVentasPanel("Ventas Totales", true);
         ventasTotalesPanel.setAlignmentX(Component.LEFT_ALIGNMENT);
+        mainPanel.add(ventasTotalesPanel);
+        mainPanel.add(Box.createRigidArea(new Dimension(0, 15)));
 
         // Panel de ventas de boletos
         JPanel ventasBoletosPanel = createVentasPanel("Ventas de Boletos", false);
         ventasBoletosPanel.setAlignmentX(Component.LEFT_ALIGNMENT);
+        mainPanel.add(ventasBoletosPanel);
+        mainPanel.add(Box.createRigidArea(new Dimension(0, 15)));
 
         // Panel de ventas de productos
         JPanel ventasProductosPanel = createVentasPanel("Ventas de Productos", false);
         ventasProductosPanel.setAlignmentX(Component.LEFT_ALIGNMENT);
+        mainPanel.add(ventasProductosPanel);
+        mainPanel.add(Box.createRigidArea(new Dimension(0, 20)));
 
         // Panel para función específica
         JPanel funcionPanel = new JPanel();
@@ -93,6 +102,8 @@ public class Ventas {
         funcionPanel.add(cantidadBoletosLabel);
         funcionPanel.add(dineroFuncionLabel);
 
+        mainPanel.add(funcionPanel);
+
         // Cargar datos
         cargarDatosVentas(ventasTotalesPanel, ventasBoletosPanel, ventasProductosPanel);
         DatabaseHelper.cargarFunciones(mainFrame, funcionComboBox);
@@ -105,24 +116,34 @@ public class Ventas {
             }
         });
 
-        // Agregar componentes al contenedor principal
-        container.add(titleLabel);
-        container.add(Box.createRigidArea(new Dimension(0, 20)));
-        container.add(ventasTotalesPanel);
-        container.add(Box.createRigidArea(new Dimension(0, 15)));
-        container.add(ventasBoletosPanel);
-        container.add(Box.createRigidArea(new Dimension(0, 15)));
-        container.add(ventasProductosPanel);
-        container.add(Box.createRigidArea(new Dimension(0, 20)));
-        container.add(funcionPanel);
-
-        contentPanel.add(container);
-
         // Cargar datos iniciales de función si hay funciones disponibles
         if (funcionComboBox.getItemCount() > 0) {
             FuncionItem firstFuncion = funcionComboBox.getItemAt(0);
             cargarVentasFuncion(firstFuncion.getId(), cantidadBoletosLabel, dineroFuncionLabel);
         }
+
+        // --- Scroll principal ---
+        JScrollPane scrollPane = new JScrollPane(mainPanel);
+        scrollPane.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_ALWAYS);
+        scrollPane.setHorizontalScrollBarPolicy(JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
+        scrollPane.getVerticalScrollBar().setUnitIncrement(16);
+        scrollPane.setBorder(BorderFactory.createEmptyBorder());
+
+        // --- Personalización del scrollbar (estilo oscuro) ---
+        scrollPane.getVerticalScrollBar().setUI(new javax.swing.plaf.basic.BasicScrollBarUI() {
+            @Override
+            protected void configureScrollBarColors() {
+                this.thumbColor = new Color(80, 80, 80);
+                this.trackColor = new Color(30, 30, 30);
+            }
+        });
+
+        // --- Integración en el panel principal de la interfaz ---
+        contentPanel.removeAll();
+        contentPanel.setLayout(new BorderLayout());
+        contentPanel.add(scrollPane, BorderLayout.CENTER);
+        contentPanel.revalidate();
+        contentPanel.repaint();
     }
 
     private JPanel createVentasPanel(String titulo, boolean soloTotal) {
@@ -163,7 +184,6 @@ public class Ventas {
 
         return panel;
     }
-// CONTINUACIÓN DE Ventas.java - Agregar estos métodos a la clase Ventas
 
     private void cargarDatosVentas(JPanel ventasTotalesPanel, JPanel ventasBoletosPanel, JPanel ventasProductosPanel) {
         DecimalFormat df = new DecimalFormat("#,##0.00");
@@ -273,5 +293,3 @@ public class Ventas {
         }
     }
 }
-
-// FIN DE LA CLASE Ventas.java
