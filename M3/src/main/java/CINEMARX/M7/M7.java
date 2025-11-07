@@ -1,8 +1,5 @@
 package CINEMARX.M7;
 
-import CINEMARX.M7.BuffetFrame.java;
-import CINEMARX.M7.ConexionBD.java;
-
 import javax.swing.*;
 import java.sql.Connection;
 
@@ -12,7 +9,7 @@ public class M7 {
         BuffetFrame buffetFrame = new BuffetFrame();
         buffetFrame.setVisible(true);
     }
-
+    
     public static void main(String args[]) {
         try {
             for (UIManager.LookAndFeelInfo info : UIManager.getInstalledLookAndFeels()) {
@@ -23,7 +20,7 @@ public class M7 {
             }
         } catch (Exception ignored) {
         }
-
+        
         // Probar conexión al iniciar
         Connection testCon = ConexionBD.getConexion();
         if (testCon != null) {
@@ -35,7 +32,7 @@ public class M7 {
                 "Error de Conexión",
                 JOptionPane.ERROR_MESSAGE);
         }
-
+        
         // Iniciar aplicación del buffet
         java.awt.EventQueue.invokeLater(() -> {
             BuffetFrame buffet = new BuffetFrame();
@@ -43,4 +40,3 @@ public class M7 {
         });
     }
 }
-
