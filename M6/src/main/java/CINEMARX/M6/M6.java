@@ -116,6 +116,8 @@ public class M6 extends JFrame {
             new UsuariosYRoles(this, contentPanel).mostrar();
         } else if (buttonName.equals("Películas")){
             new Peliculas(this, contentPanel).mostrar();
+        } else if (buttonName.equals("Salas")){
+            new Salas(this, contentPanel).mostrar();
         } else {
             showDefaultContent(buttonName);
         }
@@ -209,6 +211,7 @@ add(topBarPanel, BorderLayout.NORTH);
         addMenuButton("Clientes y Roles", "https://gaelschenone.aguilucho.ar/source_cmx/index.php?preview=botones%2FM6%2Fuser.png");
         addMenuButton("Películas", "https://gaelschenone.aguilucho.ar/source_cmx/index.php?preview=botones%2FM6%2Fvideo.png");
         addMenuButton("Personal", "https://gaelschenone.aguilucho.ar/source_cmx/index.php?preview=botones%2FM6%2Fstaff.png");
+        addMenuButton("Salas", "https://gaelschenone.aguilucho.ar/source_cmx/index.php?preview=botones%2FM6%2Fsala.png");
         
         addSeparator();
         
