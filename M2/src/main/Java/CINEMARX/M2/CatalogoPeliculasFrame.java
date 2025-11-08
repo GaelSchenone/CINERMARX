@@ -1,10 +1,3 @@
-//t2
-/*
- * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
- * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
- */
-
-//hola
 package CINEMARX.M2;
 
 import javax.swing.*;
@@ -524,25 +517,6 @@ public class CatalogoPeliculasFrame extends JFrame {
         List<Pelicula> comedia = peliculaDAO.obtenerPeliculasConFiltro("Comedia", "En Cartelera", LIMITE_POR_FILA);
         if (!comedia.isEmpty()) {
             panelPeliculasSecciones.add(crearFilaSeccion("😂 Comedia", comedia));
-            panelPeliculasSecciones.add(Box.createRigidArea(new Dimension(0, 30)));
-        }
-        // --- NUEVAS SECCIONES AÑADIDAS
-    
-        List<Pelicula> aventura = peliculaDAO.obtenerPeliculasConFiltro("Aventura", "En Cartelera", LIMITE_POR_FILA);
-        if (!aventura.isEmpty()) {
-            panelPeliculasSecciones.add(crearFilaSeccion("🗺️ Aventura", aventura));
-            panelPeliculasSecciones.add(Box.createRigidArea(new Dimension(0, 30)));
-        }
-    
-        List<Pelicula> cienciaFiccion = peliculaDAO.obtenerPeliculasConFiltro("Ciencia Ficción", "En Cartelera", LIMITE_POR_FILA);
-        if (!cienciaFiccion.isEmpty()) {
-            panelPeliculasSecciones.add(crearFilaSeccion("👽 Ciencia Ficción", cienciaFiccion));
-            panelPeliculasSecciones.add(Box.createRigidArea(new Dimension(0, 30)));
-        }
-    
-        List<Pelicula> drama = peliculaDAO.obtenerPeliculasConFiltro("Drama", "En Cartelera", LIMITE_POR_FILA);
-        if (!drama.isEmpty()) {
-            panelPeliculasSecciones.add(crearFilaSeccion("🎭 Drama", drama));
             panelPeliculasSecciones.add(Box.createRigidArea(new Dimension(0, 30)));
         }
         
