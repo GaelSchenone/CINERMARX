@@ -122,13 +122,16 @@ public class BuffetFrame extends JFrame {
         gbc.fill = GridBagConstraints.NONE;
         
         // --- 3. BUSCADOR (Campo de Texto) - CENTRADO Y ANCHO A 50 COLUMNAS ---
-        txtBuscador = new JTextField(50); // <--- ANCHO SOLICITADO
+        txtBuscador = new JTextField();
         txtBuscador.setFont(new Font("Arial", Font.PLAIN, 16));
         txtBuscador.setForeground(Color.WHITE);
         txtBuscador.setBackground(new Color(60, 60, 60));
         txtBuscador.setBorder(BorderFactory.createEmptyBorder(5, 10, 5, 10));
-        gbc.gridx = 2; // Columna 2
-        gbc.anchor = GridBagConstraints.CENTER; // Ancla al centro
+
+        gbc.gridx = 2;
+        gbc.anchor = GridBagConstraints.CENTER;
+        gbc.ipadx = 150; // Padding interno horizontal (aumenta el ancho)
+        gbc.ipady = 5;   // Padding interno vertical (aumenta el alto)
         controlPanel.add(txtBuscador, gbc);
         
         // --- 4. BOTÓN BUSCAR - CENTRADO ---
@@ -255,7 +258,7 @@ public class BuffetFrame extends JFrame {
                     if (originalIcon != null && originalIcon.getImageLoadStatus() == MediaTracker.COMPLETE) {
                         Image originalImage = originalIcon.getImage();
                         int width = 350; // Usar dimensiones fijas o dinámicas según diseño
-                        int height = 80;
+                        int height = 55;
                         Image scaledImage = originalImage.getScaledInstance(width, height, Image.SCALE_SMOOTH);
                         
                         lblLogo.setIcon(new ImageIcon(scaledImage));
