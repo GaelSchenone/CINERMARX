@@ -6,7 +6,7 @@ plugins {
 description = 'M4'
 
 application {
-    mainClass = 'CINEMARX.M4.M4'
+    mainClass = 'CINEMARX.M4.EditarEntradas.HistorialComprasExample'
 }
 
 repositories {

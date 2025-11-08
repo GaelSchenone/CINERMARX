@@ -1,4 +1,4 @@
-package CINEMARX.M7;
+package CINEMARX.M7.cinecomida;
 
 import java.sql.Connection;
 import java.sql.DriverManager;
@@ -38,3 +38,5 @@ public class ConexionBD {
         }
     }
 }
+
+

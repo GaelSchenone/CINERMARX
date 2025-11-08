@@ -1,4 +1,4 @@
-package CINEMARX.M7;
+package CINEMARX.M7.cinecomida;
 
 public class Producto {
     private int id;

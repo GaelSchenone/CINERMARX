@@ -38,13 +38,7 @@ public class MainFrame extends JFrame {
         // Header compartido
         headerPanel = new HeaderPanel();
         mainPanel.add(headerPanel, BorderLayout.NORTH);
-
-        // Separador blanco entre el header y el contenido
-        JPanel separator = new JPanel();
-        separator.setPreferredSize(new Dimension(0, 1)); // 1 pixel height
-        separator.setBackground(Color.WHITE);
-        mainPanel.add(separator, BorderLayout.CENTER); // Add separator to CENTER, it will be pushed NORTH by contentPanel
-
+        
         // Contenedor de vistas
         cardLayout = new CardLayout();
         contentPanel = new JPanel(cardLayout);
@@ -111,6 +105,15 @@ class HeaderPanel extends JPanel {
         setBorder(new EmptyBorder(10, 40, 10, 40));
         
         initComponents();
+    }
+
+    @Override
+    protected void paintComponent(Graphics g) {
+        super.paintComponent(g);
+        Graphics2D g2d = (Graphics2D) g.create();
+        g2d.setColor(Color.WHITE);
+        g2d.fillRect(0, getHeight() - 1, getWidth(), 1); // Draw 1-pixel line at the very bottom
+        g2d.dispose();
     }
     
     private void initComponents() {

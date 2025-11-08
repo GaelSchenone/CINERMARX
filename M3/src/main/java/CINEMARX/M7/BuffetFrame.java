@@ -1,4 +1,4 @@
-package CINEMARX.M7;
+package CINEMARX.M7.cinecomida;
 
 import javax.swing.*;
 import java.awt.*;
@@ -9,33 +9,12 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.net.URL;
-import javax.imageio.ImageIO;
-import java.io.InputStream;
-import java.awt.image.BufferedImage;
 
 public class BuffetFrame extends JFrame {
-    
-    // 🎨 COLOR DE FONDO UNIFORME: (43, 43, 43) que equivale a #2b2b2b
-    private static final Color COLOR_FONDO = new Color(43, 43, 43);
-    
     private JPanel panelContenido;
     private Map<Integer, Integer> carrito = new HashMap<>();
     private Map<Integer, JLabel> contadoresProductos = new HashMap<>();
-    private int idClienteActual = 1;
-    
-    // URL del Logo (Funciona)
-    private static final String URL_LOGO = "https://gaelschenone.aguilucho.ar/source_cmx/index.php?preview=M7%2F02.png";
-    
-    // ✅ MAPA DE IMÁGENES: SOLO con las 2 URLs de producto que proporcionaste (ID 6 y 7).
-    private static final Map<Integer, String> IMAGENES_PRODUCTOS = new HashMap<Integer, String>() {{
-        
-        // ID 6: Gaseosa Grande
-        put(6, "https://gaelschenone.aguilucho.ar/source_cmx/index.php?preview=M7%2FComida.png");
-        
-        // ID 7: Nachos con Queso (Usamos la URL con el espacio codificado como %20)
-        put(7, "https://gaelschenone.aguilucho.ar/source_cmx/index.php?preview=M7%2Fcomida%201.png"); 
-    }};
+    private int idClienteActual = 1; // Cliente por defecto
 
     public BuffetFrame() {
         initComponents();
@@ -53,14 +32,14 @@ public class BuffetFrame extends JFrame {
         setLocationRelativeTo(null);
 
         JPanel mainPanel = new JPanel(new BorderLayout());
-        mainPanel.setBackground(COLOR_FONDO); 
+        mainPanel.setBackground(new Color(45, 45, 45));
 
         JPanel header = createHeader();
         mainPanel.add(header, BorderLayout.NORTH);
 
         panelContenido = new JPanel();
         panelContenido.setLayout(new BoxLayout(panelContenido, BoxLayout.Y_AXIS));
-        panelContenido.setBackground(COLOR_FONDO);
+        panelContenido.setBackground(new Color(45, 45, 45));
         panelContenido.setBorder(BorderFactory.createEmptyBorder(30, 50, 30, 50));
 
         JLabel lblTitulo = new JLabel("Acompaña tu película con algo para picar:");
@@ -73,8 +52,8 @@ public class BuffetFrame extends JFrame {
         JScrollPane scroll = new JScrollPane(panelContenido);
         scroll.getVerticalScrollBar().setUnitIncrement(16);
         scroll.setBorder(null);
-        scroll.setBackground(COLOR_FONDO);
-        scroll.getViewport().setBackground(COLOR_FONDO);
+        scroll.setBackground(new Color(45, 45, 45));
+        scroll.getViewport().setBackground(new Color(45, 45, 45));
 
         mainPanel.add(scroll, BorderLayout.CENTER);
         add(mainPanel);
@@ -84,20 +63,29 @@ public class BuffetFrame extends JFrame {
 
     private JPanel createHeader() {
         JPanel header = new JPanel(new BorderLayout());
-        header.setBackground(COLOR_FONDO); 
+        header.setBackground(new Color(45, 45, 45));
         header.setBorder(BorderFactory.createEmptyBorder(15, 50, 15, 50));
 
         JButton btnVolver = new JButton("←");
         btnVolver.setFont(new Font("Arial", Font.BOLD, 28));
         btnVolver.setForeground(Color.WHITE);
-        btnVolver.setBackground(COLOR_FONDO); 
+        btnVolver.setBackground(new Color(45, 45, 45));
         btnVolver.setBorder(BorderFactory.createEmptyBorder(10, 20, 10, 20));
         btnVolver.setFocusPainted(false);
         btnVolver.setCursor(new Cursor(Cursor.HAND_CURSOR));
         btnVolver.setContentAreaFilled(false);
         btnVolver.addActionListener(e -> dispose());
 
-        JLabel lblLogo = cargarLogoDesdeURL(URL_LOGO);
+        JLabel lblLogo = new JLabel();
+        try {
+            ImageIcon logoIcon = new ImageIcon(getClass().getResource("/resources/02.png"));
+            Image logoImg = logoIcon.getImage().getScaledInstance(350, 80, Image.SCALE_SMOOTH);
+            lblLogo.setIcon(new ImageIcon(logoImg));
+        } catch (Exception e) {
+            lblLogo.setText("CINEMAR X");
+            lblLogo.setFont(new Font("Arial", Font.BOLD, 32));
+            lblLogo.setForeground(Color.WHITE);
+        }
         lblLogo.setHorizontalAlignment(SwingConstants.CENTER);
 
         JButton btnContinuar = new JButton("Continuar");
@@ -115,28 +103,6 @@ public class BuffetFrame extends JFrame {
 
         return header;
     }
-    
-    private JLabel cargarLogoDesdeURL(String urlLogo) {
-        JLabel label = new JLabel();
-        try {
-            URL imgURL = new URL(urlLogo);
-            InputStream imageIn = imgURL.openStream();
-            BufferedImage originalImage = ImageIO.read(imageIn);
-            imageIn.close();
-            
-            if (originalImage != null) {
-                Image logoImg = originalImage.getScaledInstance(350, 80, Image.SCALE_SMOOTH);
-                label.setIcon(new ImageIcon(logoImg));
-            } else {
-                throw new Exception("No se pudo leer la imagen");
-            }
-        } catch (Exception e) {
-            label.setText("CINEMAR X"); 
-            label.setFont(new Font("Arial", Font.BOLD, 32));
-            label.setForeground(Color.WHITE);
-        }
-        return label;
-    }
 
     private void cargarProductosPorCategoria() {
         Map<String, List<Producto>> productosPorCategoria = new HashMap<>();
@@ -151,31 +117,12 @@ public class BuffetFrame extends JFrame {
             ResultSet rs = stmt.executeQuery(query);
 
             while (rs.next()) {
-                int idProd = rs.getInt("ID_Prod");
-                
-                String urlImagen = IMAGENES_PRODUCTOS.getOrDefault(idProd, "");
-                
-                // Codificación: Reemplazar espacios por %20 para la URL si es necesario
-                String urlCodificada = "";
-                if (!urlImagen.isEmpty()) {
-                    if (urlImagen.contains("?preview=")) {
-                        int index = urlImagen.indexOf("?preview=") + 9;
-                        String baseURL = urlImagen.substring(0, index);
-                        String paramValue = urlImagen.substring(index);
-                        
-                        String encodedValue = paramValue.replace(" ", "%20");
-                        urlCodificada = baseURL + encodedValue;
-                    } else {
-                        urlCodificada = urlImagen;
-                    }
-                }
-                
                 Producto p = new Producto(
-                    idProd,
+                    rs.getInt("ID_Prod"),
                     rs.getString("Nombre"),
                     rs.getDouble("Precio"),
                     determinarCategoria(rs.getString("Nombre")),
-                    urlCodificada
+                    ""
                 );
 
                 String categoria = p.getCategoria();
@@ -198,15 +145,15 @@ public class BuffetFrame extends JFrame {
         
         if (nombre.contains("combo") || nombre.contains("pack")) {
             return "Combos";
-        } else if (nombre.contains("coca") || nombre.contains("pepsi") ||  
-                  nombre.contains("sprite") || nombre.contains("agua") ||  
-                  nombre.contains("jugo") || nombre.contains("gaseosa")) {
+        } else if (nombre.contains("coca") || nombre.contains("pepsi") || 
+                   nombre.contains("sprite") || nombre.contains("agua") || 
+                   nombre.contains("jugo") || nombre.contains("gaseosa")) {
             return "Bebidas";
-        } else if (nombre.contains("pochoclo") || nombre.contains("nachos") ||  
-                  nombre.contains("palomitas") || nombre.contains("hot dog")) {
+        } else if (nombre.contains("pochoclo") || nombre.contains("nachos") || 
+                   nombre.contains("palomitas")) {
             return "Snacks";
-        } else if (nombre.contains("chocolate") || nombre.contains("caramelo") ||  
-                  nombre.contains("gomita") || nombre.contains("dulce") || nombre.contains("m&m")) {
+        } else if (nombre.contains("chocolate") || nombre.contains("caramelo") || 
+                   nombre.contains("gomita") || nombre.contains("dulce")) {
             return "Golosinas";
         }
         
@@ -214,27 +161,15 @@ public class BuffetFrame extends JFrame {
     }
 
     private void mostrarProductosPorCategoria(Map<String, List<Producto>> productosPorCategoria) {
-        String[] ordenCategorias = {"Combos", "Snacks", "Bebidas", "Golosinas", "Otros"}; 
+        String[] ordenCategorias = {"Combos", "Bebidas", "Snacks", "Golosinas", "Otros"};
 
         for (String categoria : ordenCategorias) {
             if (productosPorCategoria.containsKey(categoria)) {
-                
-                JLabel lblCategoriaTitulo = new JLabel(categoria.toUpperCase());
-                lblCategoriaTitulo.setFont(new Font("Arial", Font.BOLD, 22));
-                lblCategoriaTitulo.setForeground(new Color(220, 50, 50)); 
-                lblCategoriaTitulo.setBorder(BorderFactory.createEmptyBorder(20, 0, 10, 0));
-                lblCategoriaTitulo.setAlignmentX(Component.LEFT_ALIGNMENT);
-                panelContenido.add(lblCategoriaTitulo);
-
                 List<Producto> productos = productosPorCategoria.get(categoria);
 
                 JPanel panelCategoria = new JPanel(new FlowLayout(FlowLayout.LEFT, 25, 25));
-                panelCategoria.setBackground(COLOR_FONDO); 
+                panelCategoria.setBackground(new Color(45, 45, 45));
                 panelCategoria.setAlignmentX(Component.LEFT_ALIGNMENT);
-                
-                // Corregimos el tamaño máximo para que el FlowLayout funcione correctamente en el ancho.
-                panelCategoria.setMaximumSize(new Dimension(Integer.MAX_VALUE, panelCategoria.getPreferredSize().height));
-
 
                 for (Producto p : productos) {
                     JPanel card = crearTarjetaProducto(p);
@@ -252,26 +187,27 @@ public class BuffetFrame extends JFrame {
     private JPanel crearTarjetaProducto(Producto p) {
         JPanel card = new JPanel(new BorderLayout());
         card.setPreferredSize(new Dimension(260, 400));
-        card.setBackground(COLOR_FONDO); 
+        card.setBackground(new Color(45, 45, 45));
 
-        // Panel que contiene la imagen y tiene el fondo claro
         JPanel imgPanel = new JPanel(new BorderLayout());
-        imgPanel.setBackground(new Color(235, 225, 210)); 
+        imgPanel.setBackground(new Color(235, 225, 210));
         imgPanel.setPreferredSize(new Dimension(260, 280));
 
-        JLabel lblImagen = cargarImagenProducto(p.getImagenRuta(), p.getNombre(), p.getCategoria());
-        imgPanel.add(lblImagen, BorderLayout.CENTER);
+        String emoji = obtenerEmojiPorCategoria(p.getCategoria());
+        JLabel lbl = new JLabel(emoji, SwingConstants.CENTER);
+        lbl.setFont(new Font("Arial", Font.PLAIN, 80));
+        imgPanel.add(lbl, BorderLayout.CENTER);
 
         card.add(imgPanel, BorderLayout.CENTER);
 
         JPanel info = new JPanel();
         info.setLayout(new BoxLayout(info, BoxLayout.Y_AXIS));
-        info.setBackground(COLOR_FONDO); 
+        info.setBackground(new Color(45, 45, 45));
         info.setBorder(BorderFactory.createEmptyBorder(15, 10, 10, 10));
 
         JPanel textoPanel = new JPanel();
         textoPanel.setLayout(new BoxLayout(textoPanel, BoxLayout.Y_AXIS));
-        textoPanel.setBackground(COLOR_FONDO); 
+        textoPanel.setBackground(new Color(45, 45, 45));
         textoPanel.setAlignmentX(Component.CENTER_ALIGNMENT);
 
         JLabel lblNombre = new JLabel(p.getNombre().toUpperCase());
@@ -279,7 +215,7 @@ public class BuffetFrame extends JFrame {
         lblNombre.setForeground(Color.WHITE);
         lblNombre.setAlignmentX(Component.CENTER_ALIGNMENT);
 
-        JLabel lblPrecio = new JLabel("$" + String.format("%,.0f", p.getPrecio())); 
+        JLabel lblPrecio = new JLabel("$" + String.format("%.0f", p.getPrecio()));
         lblPrecio.setFont(new Font("Arial", Font.PLAIN, 13));
         lblPrecio.setForeground(Color.WHITE);
         lblPrecio.setAlignmentX(Component.CENTER_ALIGNMENT);
@@ -289,7 +225,7 @@ public class BuffetFrame extends JFrame {
         textoPanel.add(lblPrecio);
 
         JPanel controlPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 8, 0));
-        controlPanel.setBackground(COLOR_FONDO); 
+        controlPanel.setBackground(new Color(45, 45, 45));
         controlPanel.setAlignmentX(Component.CENTER_ALIGNMENT);
 
         JButton btnRestar = new JButton("-");
@@ -302,7 +238,7 @@ public class BuffetFrame extends JFrame {
         btnRestar.setCursor(new Cursor(Cursor.HAND_CURSOR));
         btnRestar.addActionListener(e -> restarDelCarrito(p));
 
-        JLabel lblContador = new JLabel(String.valueOf(carrito.getOrDefault(p.getId(), 0))); 
+        JLabel lblContador = new JLabel("0");
         lblContador.setFont(new Font("Arial", Font.BOLD, 18));
         lblContador.setForeground(Color.WHITE);
         lblContador.setPreferredSize(new Dimension(30, 45));
@@ -332,69 +268,11 @@ public class BuffetFrame extends JFrame {
         return card;
     }
 
-    private JLabel cargarImagenProducto(String rutaImagen, String nombreProducto, String categoria) {
-        JLabel label = new JLabel();
-        label.setHorizontalAlignment(SwingConstants.CENTER);
-        label.setVerticalAlignment(SwingConstants.CENTER);
-        
-        try {
-            if (rutaImagen != null && !rutaImagen.trim().isEmpty()) { 
-                
-                URL imgURL = new URL(rutaImagen);
-                InputStream imageIn = imgURL.openStream();
-                BufferedImage originalImage = ImageIO.read(imageIn);
-                imageIn.close();
-                
-                if (originalImage != null) {
-                    
-                    // ⭐️ LÍNEA DE DEBUG AÑADIDA PARA VER EL TAMAÑO REAL
-                    System.out.println("✅ Imagen leída (" + nombreProducto + "): " + originalImage.getWidth() + "x" + originalImage.getHeight());
-                    
-                    int originalWidth = originalImage.getWidth();
-                    int originalHeight = originalImage.getHeight();
-                    
-                    int maxWidth = 240;
-                    int maxHeight = 240;
-                    
-                    double widthRatio = (double) maxWidth / originalWidth;
-                    double heightRatio = (double) maxHeight / originalHeight;
-                    double ratio = Math.min(widthRatio, heightRatio);
-                    
-                    int newWidth = (int) (originalWidth * ratio);
-                    int newHeight = (int) (originalHeight * ratio); 
-                    
-                    // Solo escalamos si es necesario
-                    if (ratio < 1.0) {
-                        Image scaledImg = originalImage.getScaledInstance(newWidth, newHeight, Image.SCALE_SMOOTH);
-                        label.setIcon(new ImageIcon(scaledImg));
-                    } else {
-                        label.setIcon(new ImageIcon(originalImage));
-                    }
-                    
-                } else {
-                    // Si ImageIO.read devuelve null, el archivo no es un formato de imagen válido
-                    throw new Exception("No se pudo leer la imagen (Formato inválido o datos corruptos)");
-                }
-            } else {
-                throw new Exception("URL vacía o no definida");
-            }
-            
-        } catch (Exception e) {
-            String emoji = obtenerEmojiPorCategoria(categoria);
-            label.setText(emoji);
-            label.setFont(new Font("Arial", Font.PLAIN, 80));
-            label.setForeground(new Color(100, 100, 100));
-            System.err.println("⚠️ Error cargando imagen para: " + nombreProducto + " - " + e.getMessage()); 
-        }
-        
-        return label;
-    }
-
     private String obtenerEmojiPorCategoria(String categoria) {
         switch (categoria) {
             case "Combos": return "🍿";
             case "Bebidas": return "🥤";
-            case "Snacks": return "🌭"; 
+            case "Snacks": return "🍕";
             case "Golosinas": return "🍬";
             default: return "🎬";
         }
@@ -492,7 +370,7 @@ public class BuffetFrame extends JFrame {
                     pstmtProducto.setInt(3, cantidad);
                     pstmtProducto.executeUpdate();
 
-                    detalleCompra.append(String.format("%dx %s - $%,.2f\n", cantidad, nombre, subtotal));
+                    detalleCompra.append(String.format("%dx %s - $%.2f\n", cantidad, nombre, subtotal));
                     System.out.println("✓ Registrado: " + cantidad + "x " + nombre);
                 }
             }
@@ -505,12 +383,11 @@ public class BuffetFrame extends JFrame {
                 "----------------------------------------\n" +
                 detalleCompra.toString() +
                 "----------------------------------------\n" +
-                String.format("TOTAL: $%,.2f", totalCompra),
+                String.format("TOTAL: $%.2f", totalCompra),
                 "Compra Exitosa",
                 JOptionPane.INFORMATION_MESSAGE);
 
             carrito.clear();
-            contadoresProductos.clear(); 
             panelContenido.removeAll();
 
             JLabel lblTitulo = new JLabel("Acompaña tu película con algo para picar:");
@@ -554,5 +431,6 @@ public class BuffetFrame extends JFrame {
         return "COMP-" + LocalDateTime.now().format(formatter);
     }
 }
+
 
 
