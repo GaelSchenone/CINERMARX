@@ -14,8 +14,8 @@ public class VerHistorial {
     }
 
     public void mostrarHistorial(JTextArea area) {
-        area.append("🎟️ Tickets: " + historialTickets + "\n");
-        area.append("💰 Total gastado: $" + totalGastado + "\n");
+        area.append("Tickets: " + historialTickets + "\n");
+        area.append("Total gastado: $" + totalGastado + "\n");
         historialPuntos.mostrarHistorialPuntos(area);
     }
 }

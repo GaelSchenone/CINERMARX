@@ -20,7 +20,7 @@ public class VentanaPrincipal extends JFrame {
         this.connection = connection;
 
         setTitle("CINEMARX");
-        setSize(1400, 750);
+        setSize(1366, 768);
         setDefaultCloseOperation(EXIT_ON_CLOSE);
         setLocationRelativeTo(null);
         setLayout(new BorderLayout());
@@ -31,21 +31,11 @@ public class VentanaPrincipal extends JFrame {
         mostrarLogin();
     }
     
-    private void cerrarSesion() {
-        int opcion = JOptionPane.showConfirmDialog(
-            this, 
-            "¿Estás seguro de que deseas cerrar sesión?", 
-            "Cerrar Sesión", 
-            JOptionPane.YES_NO_OPTION,
-            JOptionPane.QUESTION_MESSAGE
-        );
-
-        if (opcion == JOptionPane.YES_OPTION) {
+        private void cerrarSesion() {
             usuarioActual = null;
             setVisible(false);
             mostrarLogin();
         }
-    }
     
     private void crearInterfazPrincipal() {
         getContentPane().removeAll();
@@ -61,9 +51,17 @@ public class VentanaPrincipal extends JFrame {
         panelSuperior.setBorder(BorderFactory.createMatteBorder(0, 0, 1, 0, new Color(60, 60, 60)));
 
         // Logo CINEMARX (izquierda) - Solo texto
-        JLabel lblLogo = new JLabel("CINEMARX");
-        lblLogo.setFont(new Font("Segoe UI", Font.BOLD, 20));
-        lblLogo.setForeground(new Color(220, 20, 60));
+        JLabel lblLogo = new JLabel();
+        try {
+            java.net.URL url = new java.net.URL("https://gaelschenone.aguilucho.ar/source_cmx/index.php?preview=logos%2FCINEMARX%20logotipo.png");
+            ImageIcon icon = new ImageIcon(url);
+            Image img = icon.getImage().getScaledInstance(180, 40, Image.SCALE_SMOOTH);
+            lblLogo.setIcon(new ImageIcon(img));
+        } catch (Exception e) {
+            lblLogo.setText("CINEMARX");
+            lblLogo.setFont(new Font("Segoe UI", Font.BOLD, 20));
+            lblLogo.setForeground(new Color(220, 20, 60));
+        }
         lblLogo.setBorder(BorderFactory.createEmptyBorder(0, 20, 0, 20));
 
         // Usuario (derecha)
@@ -84,24 +82,50 @@ public class VentanaPrincipal extends JFrame {
         JPopupMenu menuUsuario = new JPopupMenu();
         menuUsuario.setBackground(new Color(30, 30, 30));
         menuUsuario.setBorder(BorderFactory.createLineBorder(new Color(60, 60, 60)));
-        
+
         JMenuItem itemPerfil = crearItemMenu("Perfil");
         JMenuItem itemCompras = crearItemMenu("Mis compras");
         JMenuItem itemCanjear = crearItemMenu("Canjear puntos");
-        JMenuItem itemHistorialCanjes = crearItemMenu("Historial de canjes");
         menuUsuario.addSeparator();
         JMenuItem itemCerrarSesion = crearItemMenu("Cerrar sesión");
-        
+
         itemPerfil.addActionListener(e -> mostrarPerfil());
         itemCompras.addActionListener(e -> mostrarHistorial());
-        itemCanjear.addActionListener(e -> mostrarCanjePuntos());
-        itemHistorialCanjes.addActionListener(e -> mostrarHistorialCanjes());
+        itemCanjear.addActionListener(e -> {
+            if (usuarioActual.esVIP()) {
+                mostrarCanjePuntos();
+            } else {
+                mostrarMensajeNoVIP();
+            }
+        });
+        itemCerrarSesion.addActionListener(e -> cerrarSesion());
+
+        // Si el usuario NO es VIP, deshabilitar visualmente (OPCIONAL)
+        if (!usuarioActual.esVIP()) {
+            itemCanjear.setEnabled(false);
+            itemCanjear.setForeground(new Color(100, 100, 100));
+        }
+
+        menuUsuario.add(itemPerfil);
+        menuUsuario.add(itemCompras);
+        menuUsuario.add(itemCanjear);
+        menuUsuario.add(itemCerrarSesion);
+
+        btnUsuario.addActionListener(e -> {
+            menuUsuario.show(btnUsuario, 0, btnUsuario.getHeight());
+        });
+
+        // Si el usuario NO es VIP, deshabilitar el item del menú (OPCIONAL)
+        if (!usuarioActual.esVIP()) {
+            itemCanjear.setEnabled(false);
+            itemCanjear.setForeground(new Color(100, 100, 100)); // Gris
+        }
+
         itemCerrarSesion.addActionListener(e -> cerrarSesion());
         
         menuUsuario.add(itemPerfil);
         menuUsuario.add(itemCompras);
         menuUsuario.add(itemCanjear);
-        menuUsuario.add(itemHistorialCanjes);
         menuUsuario.add(itemCerrarSesion);
         
         btnUsuario.addActionListener(e -> {
@@ -139,10 +163,19 @@ public class VentanaPrincipal extends JFrame {
         btnMisCompras.addActionListener(e -> mostrarHistorial());
 
         JButton btnCanjearPuntos = crearBotonLateral("• Canjear puntos");
-        btnCanjearPuntos.addActionListener(e -> mostrarCanjePuntos());
+        btnCanjearPuntos.addActionListener(e -> {
+            if (usuarioActual.esVIP()) {
+                mostrarCanjePuntos();
+            } else {
+                mostrarMensajeNoVIP();
+            }
+        });
 
-        JButton btnHistorialCanjes = crearBotonLateral("• Historial de canjes");
-        btnHistorialCanjes.addActionListener(e -> mostrarHistorialCanjes());
+        // Si el usuario NO es VIP, deshabilitar visualmente el botón (OPCIONAL)
+        if (!usuarioActual.esVIP()) {
+            btnCanjearPuntos.setEnabled(false);
+            btnCanjearPuntos.setForeground(new Color(100, 100, 100)); // Gris
+        }
 
         // Separador
         JSeparator separador = new JSeparator();
@@ -159,7 +192,6 @@ public class VentanaPrincipal extends JFrame {
         panelLateral.add(lblPagosTitulo);
         panelLateral.add(btnMisCompras);
         panelLateral.add(btnCanjearPuntos);
-        panelLateral.add(btnHistorialCanjes);
         panelLateral.add(Box.createVerticalStrut(20));
         panelLateral.add(separador);
         panelLateral.add(Box.createVerticalStrut(10));
@@ -208,7 +240,7 @@ public class VentanaPrincipal extends JFrame {
                 boton.setOpaque(false);
             }
         });
-        
+
         return boton;
     }
 
@@ -273,553 +305,545 @@ public class VentanaPrincipal extends JFrame {
         panelContenido.repaint();
     }
 
-    private void mostrarCanjePuntos() {
-        // Recargar puntos desde la BD
-        puntosUsuario = sistemaLogin.getDbHelper().obtenerPuntosCliente(usuarioActual.getCorreo());
-        
-        panelContenido.removeAll();
-        panelContenido.setLayout(new BorderLayout());
-
-        JPanel panelPrincipal = new JPanel();
-        panelPrincipal.setLayout(new BorderLayout());
-        panelPrincipal.setBackground(new Color(30, 30, 30));
-
-        // Panel superior con título y puntos
-        JPanel panelSuperior = new JPanel();
-        panelSuperior.setBackground(new Color(30, 30, 30));
-        panelSuperior.setLayout(new BorderLayout());
-        panelSuperior.setBorder(BorderFactory.createEmptyBorder(30, 40, 20, 40));
-
-        JPanel panelIzquierdo = new JPanel();
-        panelIzquierdo.setLayout(new BoxLayout(panelIzquierdo, BoxLayout.Y_AXIS));
-        panelIzquierdo.setBackground(new Color(30, 30, 30));
-
-        JLabel lblTitulo = new JLabel("Canjea tus puntos:");
-        lblTitulo.setFont(new Font("Segoe UI", Font.BOLD, 28));
-        lblTitulo.setForeground(Color.WHITE);
-        lblTitulo.setAlignmentX(Component.LEFT_ALIGNMENT);
-
-        panelIzquierdo.add(lblTitulo);
-
-        JPanel panelDerecho = new JPanel(new FlowLayout(FlowLayout.RIGHT));
-        panelDerecho.setBackground(new Color(30, 30, 30));
-
-        JLabel lblPuntosDisponibles = new JLabel("Tus puntos Cinemax: " + puntosUsuario);
-        lblPuntosDisponibles.setFont(new Font("Segoe UI", Font.BOLD, 16));
-        lblPuntosDisponibles.setForeground(Color.WHITE);
-        lblPuntosDisponibles.setBackground(new Color(220, 20, 60));
-        lblPuntosDisponibles.setOpaque(true);
-        lblPuntosDisponibles.setBorder(BorderFactory.createEmptyBorder(8, 15, 8, 15));
-        panelDerecho.add(lblPuntosDisponibles);
-
-        panelSuperior.add(panelIzquierdo, BorderLayout.WEST);
-        panelSuperior.add(panelDerecho, BorderLayout.EAST);
-
-        // Panel central con productos
-        JPanel panelProductos = new JPanel();
-        panelProductos.setLayout(new GridLayout(2, 2, 20, 20));
-        panelProductos.setBackground(new Color(30, 30, 30));
-        panelProductos.setBorder(BorderFactory.createEmptyBorder(20, 40, 40, 40));
-
-        // Productos disponibles con sus precios
-        String[][] productos = {
-            {"COMBO PANCHO", "500"},
-            {"COMBO CHIPA", "500"},
-            {"AMERICAN PSYCHO", "1500"},
-            {"TAXI DRIVER", "1500"}
-        };
-
-        ButtonGroup grupo = new ButtonGroup();
-        JRadioButton[] radios = new JRadioButton[4];
-
-        for (int i = 0; i < productos.length; i++) {
-            JPanel panelProducto = crearPanelProducto(productos[i][0], productos[i][1], true);
-            radios[i] = (JRadioButton) panelProducto.getComponent(0);
-            grupo.add(radios[i]);
-            panelProductos.add(panelProducto);
+private void mostrarCanjePuntos() {
+    // Mostrar indicador de carga PRIMERO
+    panelContenido.removeAll();
+    panelContenido.setLayout(new GridBagLayout());
+    
+    JLabel lblCargando = new JLabel("Cargando productos...");
+    lblCargando.setFont(new Font("Segoe UI", Font.BOLD, 18));
+    lblCargando.setForeground(Color.WHITE);
+    panelContenido.add(lblCargando);
+    panelContenido.revalidate();
+    panelContenido.repaint();
+    
+    // Cargar el contenido en un hilo separado para no bloquear la UI
+    SwingWorker<Void, Void> worker = new SwingWorker<Void, Void>() {
+        @Override
+        protected Void doInBackground() throws Exception {
+            // Recargar puntos desde la BD en segundo plano
+            puntosUsuario = sistemaLogin.getDbHelper().obtenerPuntosCliente(usuarioActual.getCorreo());
+            return null;
         }
+        
+        @Override
+        protected void done() {
+            // Una vez cargados los puntos, mostrar la interfaz
+            mostrarInterfazCanjePuntos();
+        }
+    };
+    
+    worker.execute();
+}
 
-        // Panel inferior con botón de canje
-        JPanel panelInferior = new JPanel(new FlowLayout(FlowLayout.CENTER));
-        panelInferior.setBackground(new Color(30, 30, 30));
-        panelInferior.setBorder(BorderFactory.createEmptyBorder(0, 0, 30, 0));
+// NUEVO MÉTODO AUXILIAR
+private void mostrarInterfazCanjePuntos() {
+    panelContenido.removeAll();
+    panelContenido.setLayout(new BorderLayout());
 
-        JButton btnCanjear = new JButton("CANJEAR PUNTOS");
-        btnCanjear.setPreferredSize(new Dimension(250, 50));
-        btnCanjear.setBackground(new Color(220, 20, 60));
-        btnCanjear.setForeground(Color.WHITE);
-        btnCanjear.setFont(new Font("Segoe UI", Font.BOLD, 16));
-        btnCanjear.setFocusPainted(false);
-        btnCanjear.setBorderPainted(false);
-        btnCanjear.setCursor(new Cursor(Cursor.HAND_CURSOR));
+    JPanel panelPrincipal = new JPanel();
+    panelPrincipal.setLayout(new BorderLayout());
+    panelPrincipal.setBackground(new Color(30, 30, 30));
 
-        // Panel para mensajes
-        JPanel panelMensajes = new JPanel(new FlowLayout(FlowLayout.CENTER));
-        panelMensajes.setBackground(new Color(30, 30, 30));
-        panelMensajes.setBorder(BorderFactory.createEmptyBorder(0, 0, 15, 0));
-        panelMensajes.setVisible(false);
+    // Panel superior con título y puntos
+    JPanel panelSuperior = new JPanel();
+    panelSuperior.setBackground(new Color(30, 30, 30));
+    panelSuperior.setLayout(new BorderLayout());
+    panelSuperior.setBorder(BorderFactory.createEmptyBorder(30, 40, 20, 40));
 
-        JLabel lblMensaje = new JLabel();
-        lblMensaje.setFont(new Font("Segoe UI", Font.BOLD, 13));
-        lblMensaje.setForeground(new Color(255, 87, 51));
-        panelMensajes.add(lblMensaje);
+    JPanel panelIzquierdo = new JPanel();
+    panelIzquierdo.setLayout(new BoxLayout(panelIzquierdo, BoxLayout.Y_AXIS));
+    panelIzquierdo.setBackground(new Color(30, 30, 30));
 
-        btnCanjear.addActionListener(e -> {
-            int seleccionado = -1;
-            for (int i = 0; i < radios.length; i++) {
-                if (radios[i].isSelected()) {
-                    seleccionado = i;
-                    break;
-                }
-            }
+    JLabel lblTitulo = new JLabel("Canjea tus puntos:");
+    lblTitulo.setFont(new Font("Segoe UI", Font.BOLD, 28));
+    lblTitulo.setForeground(Color.WHITE);
+    lblTitulo.setAlignmentX(Component.LEFT_ALIGNMENT);
 
-            if (seleccionado == -1) {
-                return;
-            }
+    panelIzquierdo.add(lblTitulo);
 
-            String productoNombre = productos[seleccionado][0];
-            int puntosRequeridos = Integer.parseInt(productos[seleccionado][1]);
+    JPanel panelDerecho = new JPanel(new FlowLayout(FlowLayout.RIGHT));
+    panelDerecho.setBackground(new Color(30, 30, 30));
 
-            if (puntosUsuario >= puntosRequeridos) {
-                // REGISTRAR CANJE EN LA BASE DE DATOS
-                if (sistemaLogin.getDbHelper().registrarCanje(usuarioActual.getCorreo(), productoNombre, puntosRequeridos)) {
-                    puntosUsuario -= puntosRequeridos;
+    JLabel lblPuntosDisponibles = new JLabel("Tus puntos Cinemax: " + puntosUsuario);
+    lblPuntosDisponibles.setFont(new Font("Segoe UI", Font.BOLD, 16));
+    lblPuntosDisponibles.setForeground(Color.WHITE);
+    lblPuntosDisponibles.setBackground(new Color(220, 20, 60));
+    lblPuntosDisponibles.setOpaque(true);
+    lblPuntosDisponibles.setBorder(BorderFactory.createEmptyBorder(8, 15, 8, 15));
+    panelDerecho.add(lblPuntosDisponibles);
 
-                    // Mostrar pantalla de éxito
-                    mostrarPantallaCanjeoExitoso(productoNombre, puntosRequeridos);
-                    grupo.clearSelection();
-                } else {
-                    lblMensaje.setText("⚠ Error al procesar el canje. Intenta de nuevo.");
-                    panelMensajes.setVisible(true);
-                }
-            } else {
-                lblMensaje.setText("⚠ No tienes suficientes puntos para canjear este producto");
-                lblMensaje.setForeground(new Color(255, 152, 0));
-                panelMensajes.setVisible(true);
+    panelSuperior.add(panelIzquierdo, BorderLayout.WEST);
+    panelSuperior.add(panelDerecho, BorderLayout.EAST);
 
-                // Ocultar mensaje después de 4 segundos
-                Timer timer = new Timer(4000, evt -> panelMensajes.setVisible(false));
-                timer.setRepeats(false);
-                timer.start();
-            }
-        });
+    // Panel central con productos - GRID MÁS ESPACIADO
+    JPanel panelProductos = new JPanel();
+    panelProductos.setLayout(new GridLayout(2, 2, 30, 30)); // Menos espaciado
+    panelProductos.setBackground(new Color(30, 30, 30));
+    panelProductos.setBorder(BorderFactory.createEmptyBorder(20, 30, 40, 30)); // Mejor distribución
 
-        panelInferior.add(panelMensajes);
-        panelInferior.add(btnCanjear);
+    // Productos disponibles con sus precios
+    String[][] productos = {
+        {"COMBO PANCHO", "2000"},
+        {"COMBO POCHOCLO", "5000"},
+        {"COMBO NACHOS", "2000"},
+        {"GASEOSA", "1500"}
+    };
 
-        panelPrincipal.add(panelSuperior, BorderLayout.NORTH);
-        panelPrincipal.add(panelProductos, BorderLayout.CENTER);
-        panelPrincipal.add(panelInferior, BorderLayout.SOUTH);
+    ButtonGroup grupo = new ButtonGroup();
+    JRadioButton[] radios = new JRadioButton[4];
 
-        panelContenido.add(panelPrincipal);
-        panelContenido.revalidate();
-        panelContenido.repaint();
+    for (int i = 0; i < productos.length; i++) {
+        JPanel panelProducto = crearPanelProducto(productos[i][0], productos[i][1], true);
+        radios[i] = (JRadioButton) panelProducto.getComponent(0);
+        grupo.add(radios[i]);
+        panelProductos.add(panelProducto);
     }
 
-    private JPanel crearPanelProducto(String nombre, String puntos, boolean mostrarPuntos) {
-        JPanel panel = new JPanel();
-        panel.setLayout(new BorderLayout());
-        panel.setBackground(new Color(45, 45, 45));
-        panel.setBorder(BorderFactory.createLineBorder(new Color(70, 70, 70), 2));
-        panel.setCursor(new Cursor(Cursor.HAND_CURSOR));
+    // Panel inferior con botón de canje
+    JPanel panelInferior = new JPanel(new FlowLayout(FlowLayout.CENTER));
+    panelInferior.setBackground(new Color(30, 30, 30));
+    panelInferior.setBorder(BorderFactory.createEmptyBorder(0, 0, 30, 0));
 
-        JRadioButton radio = new JRadioButton();
-        radio.setBackground(new Color(45, 45, 45));
-        radio.setFocusPainted(false);
-        radio.setBorder(BorderFactory.createEmptyBorder(10, 10, 0, 0));
+    JButton btnCanjear = new JButton("CANJEAR PUNTOS");
+    btnCanjear.setPreferredSize(new Dimension(250, 50));
+    btnCanjear.setBackground(new Color(220, 20, 60));
+    btnCanjear.setForeground(Color.WHITE);
+    btnCanjear.setFont(new Font("Segoe UI", Font.BOLD, 16));
+    btnCanjear.setFocusPainted(false);
+    btnCanjear.setBorderPainted(false);
+    btnCanjear.setCursor(new Cursor(Cursor.HAND_CURSOR));
 
-        // Panel para la imagen (placeholder con color de fondo)
-        JPanel panelImagen = new JPanel();
-        panelImagen.setPreferredSize(new Dimension(200, 180));
-        panelImagen.setBackground(new Color(60, 60, 60));
-        panelImagen.setLayout(new GridBagLayout());
-        
-        JLabel lblIcono = new JLabel("🍿");
-        lblIcono.setFont(new Font("Segoe UI", Font.PLAIN, 60));
-        panelImagen.add(lblIcono);
+    // Panel para mensajes
+    JPanel panelMensajes = new JPanel(new FlowLayout(FlowLayout.CENTER));
+    panelMensajes.setBackground(new Color(30, 30, 30));
+    panelMensajes.setBorder(BorderFactory.createEmptyBorder(0, 0, 15, 0));
+    panelMensajes.setVisible(false);
 
-        // Panel de información
-        JPanel panelInfo = new JPanel();
-        panelInfo.setLayout(new BoxLayout(panelInfo, BoxLayout.Y_AXIS));
-        panelInfo.setBackground(new Color(45, 45, 45));
-        panelInfo.setBorder(BorderFactory.createEmptyBorder(15, 15, 15, 15));
+    JLabel lblMensaje = new JLabel();
+    lblMensaje.setFont(new Font("Segoe UI", Font.BOLD, 13));
+    lblMensaje.setForeground(new Color(255, 87, 51));
+    panelMensajes.add(lblMensaje);
 
-        JLabel lblNombre = new JLabel(nombre);
-        lblNombre.setFont(new Font("Segoe UI", Font.BOLD, 16));
-        lblNombre.setForeground(Color.WHITE);
-        lblNombre.setAlignmentX(Component.CENTER_ALIGNMENT);
-
-        panelInfo.add(lblNombre);
-
-        if (mostrarPuntos) {
-            panelInfo.add(Box.createVerticalStrut(10));
-            JLabel lblPuntos = new JLabel(puntos);
-            lblPuntos.setFont(new Font("Segoe UI", Font.BOLD, 14));
-            lblPuntos.setForeground(new Color(220, 20, 60));
-            lblPuntos.setAlignmentX(Component.CENTER_ALIGNMENT);
-            panelInfo.add(lblPuntos);
+    btnCanjear.addActionListener(e -> {
+        int seleccionado = -1;
+        for (int i = 0; i < radios.length; i++) {
+            if (radios[i].isSelected()) {
+                seleccionado = i;
+                break;
+            }
         }
 
-        JPanel panelCentral = new JPanel(new BorderLayout());
-        panelCentral.setBackground(new Color(45, 45, 45));
-        panelCentral.add(panelImagen, BorderLayout.CENTER);
-        panelCentral.add(panelInfo, BorderLayout.SOUTH);
+        if (seleccionado == -1) {
+            lblMensaje.setText("Selecciona un producto para canjear");
+            lblMensaje.setForeground(new Color(255, 152, 0));
+            panelMensajes.setVisible(true);
+            
+            Timer timer = new Timer(3000, evt -> panelMensajes.setVisible(false));
+            timer.setRepeats(false);
+            timer.start();
+            return;
+        }
 
-        panel.add(radio, BorderLayout.NORTH);
-        panel.add(panelCentral, BorderLayout.CENTER);
+        String productoNombre = productos[seleccionado][0];
+        int puntosRequeridos = Integer.parseInt(productos[seleccionado][1]);
 
-        // Hacer que TODO el panel sea clickeable
-        MouseAdapter clickListener = new MouseAdapter() {
-            @Override
-            public void mouseClicked(MouseEvent e) {
-                radio.setSelected(true);
-            }
-        };
-        
-        panel.addMouseListener(clickListener);
-        panelImagen.addMouseListener(clickListener);
-        panelInfo.addMouseListener(clickListener);
-        panelCentral.addMouseListener(clickListener);
-
-        return panel;
-    }
-
-    private void mostrarHistorialCanjes() {
-        // Recargar puntos desde la BD
-        puntosUsuario = sistemaLogin.getDbHelper().obtenerPuntosCliente(usuarioActual.getCorreo());
-        
-        panelContenido.removeAll();
-        panelContenido.setLayout(new BorderLayout());
-
-        JPanel panelPrincipal = new JPanel();
-        panelPrincipal.setLayout(new BorderLayout());
-        panelPrincipal.setBackground(new Color(30, 30, 30));
-
-        JPanel panelSuperior = new JPanel();
-        panelSuperior.setBackground(new Color(30, 30, 30));
-        panelSuperior.setLayout(new BorderLayout());
-        panelSuperior.setBorder(BorderFactory.createEmptyBorder(30, 40, 20, 40));
-
-        JPanel panelIzquierdo = new JPanel();
-        panelIzquierdo.setLayout(new BoxLayout(panelIzquierdo, BoxLayout.Y_AXIS));
-        panelIzquierdo.setBackground(new Color(30, 30, 30));
-
-        JLabel lblTitulo = new JLabel("Historial de canjes");
-        lblTitulo.setFont(new Font("Segoe UI", Font.BOLD, 28));
-        lblTitulo.setForeground(Color.WHITE);
-        lblTitulo.setAlignmentX(Component.LEFT_ALIGNMENT);
-
-        JLabel lblSubtitulo = new JLabel("Productos canjeados con tus puntos Cinemax.");
-        lblSubtitulo.setFont(new Font("Segoe UI", Font.PLAIN, 14));
-        lblSubtitulo.setForeground(new Color(180, 180, 180));
-        lblSubtitulo.setAlignmentX(Component.LEFT_ALIGNMENT);
-
-        panelIzquierdo.add(lblTitulo);
-        panelIzquierdo.add(Box.createVerticalStrut(5));
-        panelIzquierdo.add(lblSubtitulo);
-
-        JPanel panelDerecho = new JPanel(new FlowLayout(FlowLayout.RIGHT, 20, 0));
-        panelDerecho.setBackground(new Color(30, 30, 30));
-
-        // OBTENER PUNTOS GASTADOS DESDE LA BD
-        int totalGastado = 0;
-        String sqlPuntosGastados = "SELECT PuntosGastados FROM Cliente WHERE Mail = ?";
-        try (PreparedStatement pstmt = connection.prepareStatement(sqlPuntosGastados)) {
-            pstmt.setString(1, usuarioActual.getCorreo());
-            try (ResultSet rs = pstmt.executeQuery()) {
-                if (rs.next()) {
-                    totalGastado = rs.getInt("PuntosGastados");
+        if (puntosUsuario >= puntosRequeridos) {
+            // Mostrar indicador de procesamiento
+            btnCanjear.setEnabled(false);
+            btnCanjear.setText("PROCESANDO...");
+            
+            // Procesar en segundo plano
+            SwingWorker<Boolean, Void> canjeWorker = new SwingWorker<Boolean, Void>() {
+                @Override
+                protected Boolean doInBackground() throws Exception {
+                    return sistemaLogin.getDbHelper().registrarCanje(usuarioActual.getCorreo(), productoNombre, puntosRequeridos);
                 }
-            }
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
-
-        JLabel lblPuntosGastados = new JLabel("Gastados: " + totalGastado);
-        lblPuntosGastados.setFont(new Font("Segoe UI", Font.BOLD, 14));
-        lblPuntosGastados.setForeground(new Color(255, 140, 0));
-        panelDerecho.add(lblPuntosGastados);
-
-        JLabel lblPuntosActuales = new JLabel("Actuales: " + puntosUsuario);
-        lblPuntosActuales.setFont(new Font("Segoe UI", Font.BOLD, 16));
-        lblPuntosActuales.setForeground(Color.WHITE);
-        lblPuntosActuales.setBackground(new Color(220, 20, 60));
-        lblPuntosActuales.setOpaque(true);
-        lblPuntosActuales.setBorder(BorderFactory.createEmptyBorder(8, 15, 8, 15));
-        panelDerecho.add(lblPuntosActuales);
-
-        panelSuperior.add(panelIzquierdo, BorderLayout.WEST);
-        panelSuperior.add(panelDerecho, BorderLayout.EAST);
-
-        JPanel panelTabla = new JPanel();
-        panelTabla.setBackground(new Color(40, 40, 40));
-        panelTabla.setLayout(new BorderLayout());
-        panelTabla.setBorder(BorderFactory.createEmptyBorder(20, 40, 20, 40));
-
-        // OBTENER HISTORIAL DESDE LA BASE DE DATOS
-        ResultSet rs = sistemaLogin.getDbHelper().obtenerHistorialCanjes(usuarioActual.getCorreo());
-        java.text.SimpleDateFormat sdf = new java.text.SimpleDateFormat("dd/MM/yy");
-        boolean hayCanjes = false;
-
-        try {
-            if (rs != null && rs.isBeforeFirst()) {
-                hayCanjes = true;
-            }
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
-
-        if (!hayCanjes) {
-            JLabel lblSinCanjes = new JLabel("No has canjeado ningún producto aún.");
-            lblSinCanjes.setFont(new Font("Segoe UI", Font.PLAIN, 16));
-            lblSinCanjes.setForeground(new Color(150, 150, 150));
-            lblSinCanjes.setHorizontalAlignment(SwingConstants.CENTER);
-            panelTabla.add(lblSinCanjes, BorderLayout.CENTER);
+                
+                @Override
+                protected void done() {
+                    try {
+                        if (get()) {
+                            puntosUsuario -= puntosRequeridos;
+                            mostrarPantallaCanjeoExitoso(productoNombre, puntosRequeridos);
+                            grupo.clearSelection();
+                        } else {
+                            lblMensaje.setText("Error al procesar el canje. Intenta de nuevo.");
+                            lblMensaje.setForeground(new Color(244, 67, 54));
+                            panelMensajes.setVisible(true);
+                            btnCanjear.setEnabled(true);
+                            btnCanjear.setText("CANJEAR PUNTOS");
+                        }
+                    } catch (Exception ex) {
+                        ex.printStackTrace();
+                        btnCanjear.setEnabled(true);
+                        btnCanjear.setText("CANJEAR PUNTOS");
+                    }
+                }
+            };
+            
+            canjeWorker.execute();
+            
         } else {
-            JPanel panelEncabezados = new JPanel(new GridLayout(1, 3));
-            panelEncabezados.setBackground(new Color(40, 40, 40));
-            panelEncabezados.setBorder(BorderFactory.createEmptyBorder(0, 0, 15, 0));
+            lblMensaje.setText("No tienes suficientes puntos para canjear este producto");
+            lblMensaje.setForeground(new Color(255, 152, 0));
+            panelMensajes.setVisible(true);
 
-            JLabel lblFecha = new JLabel("Fecha");
-            lblFecha.setFont(new Font("Segoe UI", Font.BOLD, 13));
-            lblFecha.setForeground(new Color(200, 200, 200));
-
-            JLabel lblProducto = new JLabel("Producto");
-            lblProducto.setFont(new Font("Segoe UI", Font.BOLD, 13));
-            lblProducto.setForeground(new Color(200, 200, 200));
-
-            JLabel lblPuntos = new JLabel("Puntos", SwingConstants.RIGHT);
-            lblPuntos.setFont(new Font("Segoe UI", Font.BOLD, 13));
-            lblPuntos.setForeground(new Color(200, 200, 200));
-
-            panelEncabezados.add(lblFecha);
-            panelEncabezados.add(lblProducto);
-            panelEncabezados.add(lblPuntos);
-
-            JPanel panelCanjes = new JPanel();
-            panelCanjes.setLayout(new BoxLayout(panelCanjes, BoxLayout.Y_AXIS));
-            panelCanjes.setBackground(new Color(40, 40, 40));
-
-            try {
-                int contador = 0;
-                while (rs.next()) {
-                    Timestamp fecha = rs.getTimestamp("FechaCanje");
-                    String producto = rs.getString("Producto");
-                    int puntos = rs.getInt("Puntos");
-                    
-                    JPanel panelFila = new JPanel(new GridLayout(1, 3));
-                    panelFila.setBackground(new Color(40, 40, 40));
-                    panelFila.setBorder(BorderFactory.createEmptyBorder(12, 0, 12, 0));
-                    panelFila.setMaximumSize(new Dimension(Integer.MAX_VALUE, 50));
-
-                    JLabel fechaLabel = new JLabel(sdf.format(fecha));
-                    fechaLabel.setFont(new Font("Segoe UI", Font.PLAIN, 13));
-                    fechaLabel.setForeground(Color.WHITE);
-
-                    JLabel productoLabel = new JLabel(producto);
-                    productoLabel.setFont(new Font("Segoe UI", Font.PLAIN, 13));
-                    productoLabel.setForeground(Color.WHITE);
-
-                    JLabel puntosLabel = new JLabel(String.valueOf(puntos), SwingConstants.RIGHT);
-                    puntosLabel.setFont(new Font("Segoe UI", Font.BOLD, 13));
-                    puntosLabel.setForeground(new Color(220, 20, 60));
-
-                    panelFila.add(fechaLabel);
-                    panelFila.add(productoLabel);
-                    panelFila.add(puntosLabel);
-
-                    panelCanjes.add(panelFila);
-
-                    contador++;
-                    JSeparator separador = new JSeparator();
-                    separador.setForeground(new Color(60, 60, 60));
-                    separador.setMaximumSize(new Dimension(Integer.MAX_VALUE, 1));
-                    panelCanjes.add(separador);
-                }
-
-                if (rs != null) {
-                    rs.close();
-                }
-            } catch (SQLException e) {
-                e.printStackTrace();
-            }
-
-            JScrollPane scrollCanjes = new JScrollPane(panelCanjes);
-            scrollCanjes.setBorder(null);
-            scrollCanjes.setBackground(new Color(40, 40, 40));
-            scrollCanjes.getViewport().setBackground(new Color(40, 40, 40));
-
-            panelTabla.add(panelEncabezados, BorderLayout.NORTH);
-            panelTabla.add(scrollCanjes, BorderLayout.CENTER);
+            Timer timer = new Timer(4000, evt -> panelMensajes.setVisible(false));
+            timer.setRepeats(false);
+            timer.start();
         }
+    });
 
-        panelPrincipal.add(panelSuperior, BorderLayout.NORTH);
-        panelPrincipal.add(panelTabla, BorderLayout.CENTER);
+    panelInferior.add(panelMensajes);
+    panelInferior.add(btnCanjear);
 
-        panelContenido.add(panelPrincipal, BorderLayout.CENTER);
-        panelContenido.revalidate();
-        panelContenido.repaint();
+    panelPrincipal.add(panelSuperior, BorderLayout.NORTH);
+    panelPrincipal.add(panelProductos, BorderLayout.CENTER);
+    panelPrincipal.add(panelInferior, BorderLayout.SOUTH);
+
+    panelContenido.add(panelPrincipal);
+    panelContenido.revalidate();
+    panelContenido.repaint();
+}
+
+private JPanel crearPanelProducto(String nombre, String puntos, boolean mostrarPuntos) {
+    JPanel panel = new JPanel();
+    panel.setLayout(new BorderLayout());
+    panel.setBackground(new Color(30, 30, 30));
+    panel.setBorder(BorderFactory.createLineBorder(new Color(50, 50, 50), 2));
+    panel.setCursor(new Cursor(Cursor.HAND_CURSOR));
+    
+// Tamaño JUSTO al tamaño de la imagen + texto
+int anchoPanel, altoPanel;
+
+if (nombre.equals("COMBO PANCHO") || nombre.equals("COMBO POCHOCLO")) {
+    // Combos: imagen 160x160 + radio + texto = 170x230
+    anchoPanel = 170;
+    altoPanel = 230;
+} else {
+    // Películas: imagen 130x240 + radio + texto = 140x310
+    anchoPanel = 140;
+    altoPanel = 310;
+}
+
+panel.setPreferredSize(new Dimension(anchoPanel, altoPanel));
+panel.setMinimumSize(new Dimension(anchoPanel, altoPanel));
+panel.setMaximumSize(new Dimension(anchoPanel, altoPanel));
+
+    panel.addMouseListener(new MouseAdapter() {
+        @Override
+        public void mouseEntered(MouseEvent e) {
+            panel.setBorder(BorderFactory.createLineBorder(new Color(220, 20, 60), 2));
+        }
+        
+        @Override
+        public void mouseExited(MouseEvent e) {
+            panel.setBorder(BorderFactory.createLineBorder(new Color(50, 50, 50), 2));
+        }
+    });
+
+    // Radio button pequeño arriba
+    JRadioButton radio = new JRadioButton();
+    radio.setBackground(new Color(30, 30, 30));
+    radio.setFocusPainted(false);
+    radio.setBorder(BorderFactory.createEmptyBorder(5, 5, 0, 0));
+
+    // Panel para la imagen - que se vea COMPLETA
+    JPanel panelImagenContainer = new JPanel();
+    panelImagenContainer.setBackground(new Color(30, 30, 30));
+    panelImagenContainer.setLayout(new GridBagLayout()); // Para centrar
+    panelImagenContainer.setBorder(BorderFactory.createEmptyBorder(5, 5, 5, 5));
+    
+    JLabel lblImagen = new JLabel();
+    lblImagen.setHorizontalAlignment(SwingConstants.CENTER);
+    lblImagen.setVerticalAlignment(SwingConstants.CENTER);
+
+    String urlImagen = "";
+    int anchoImg = 160;
+    int altoImg = 240;
+    
+    switch(nombre) {
+        case "COMBO PANCHO":
+            urlImagen = "https://gaelschenone.aguilucho.ar/source_cmx/index.php?preview=M7%2F8.png";
+            anchoImg = 155;
+            altoImg = 155;
+            break;
+        case "COMBO POCHOCLO":
+            urlImagen = "https://gaelschenone.aguilucho.ar/source_cmx/index.php?preview=M7%2F9.png";
+            anchoImg = 155;
+            altoImg = 155;
+            break;
+        case "COMBO NACHOS":
+            urlImagen = "https://gaelschenone.aguilucho.ar/source_cmx/index.php?preview=M7%2F7.png";
+            anchoImg = 155;
+            altoImg = 155;
+            break;
+        case "GASEOSA":
+            urlImagen = "https://gaelschenone.aguilucho.ar/source_cmx/index.php?preview=M7%2F5.png";
+            anchoImg = 160;
+            altoImg = 160;
+            break;
     }
 
-    private void mostrarHistorial() {
-        // Recargar puntos desde la BD
-        puntosUsuario = sistemaLogin.getDbHelper().obtenerPuntosCliente(usuarioActual.getCorreo());
-        
-        panelContenido.removeAll();
-        panelContenido.setLayout(new BorderLayout());
+    if (!urlImagen.isEmpty()) {
+        try {
+            java.net.URL url = new java.net.URL(urlImagen);
+            ImageIcon icon = new ImageIcon(url);
+            // Redimensionar manteniendo proporción
+            Image img = icon.getImage().getScaledInstance(anchoImg, altoImg, Image.SCALE_SMOOTH);
+            lblImagen.setIcon(new ImageIcon(img));
+        } catch (Exception e) {
+            lblImagen.setText("🍿");
+            lblImagen.setFont(new Font("Segoe UI", Font.PLAIN, 40));
+            lblImagen.setForeground(Color.WHITE);
+        }
+    }
 
-        JPanel panelPrincipal = new JPanel();
-        panelPrincipal.setLayout(new BorderLayout());
-        panelPrincipal.setBackground(new Color(30, 30, 30));
+    panelImagenContainer.add(lblImagen);
 
-        JPanel panelSuperior = new JPanel();
-        panelSuperior.setBackground(new Color(30, 30, 30));
-        panelSuperior.setLayout(new BorderLayout());
-        panelSuperior.setBorder(BorderFactory.createEmptyBorder(30, 40, 20, 40));
+    // Panel de información abajo
+    JPanel panelInfo = new JPanel();
+    panelInfo.setLayout(new BoxLayout(panelInfo, BoxLayout.Y_AXIS));
+    panelInfo.setBackground(new Color(30, 30, 30));
+    panelInfo.setBorder(BorderFactory.createEmptyBorder(8, 5, 8, 5));
 
-        JPanel panelIzquierdo = new JPanel();
-        panelIzquierdo.setLayout(new BoxLayout(panelIzquierdo, BoxLayout.Y_AXIS));
-        panelIzquierdo.setBackground(new Color(30, 30, 30));
+    JLabel lblNombre = new JLabel(nombre);
+    lblNombre.setFont(new Font("Segoe UI", Font.BOLD, 13));
+    lblNombre.setForeground(Color.WHITE);
+    lblNombre.setAlignmentX(Component.CENTER_ALIGNMENT);
+    panelInfo.add(lblNombre);
 
-        JLabel lblTitulo = new JLabel("Mis compras");
-        lblTitulo.setFont(new Font("Segoe UI", Font.BOLD, 28));
-        lblTitulo.setForeground(Color.WHITE);
-        lblTitulo.setAlignmentX(Component.LEFT_ALIGNMENT);
-
-        JLabel lblSubtitulo = new JLabel("Consulta el historial de compras realizadas en tu cuenta.");
-        lblSubtitulo.setFont(new Font("Segoe UI", Font.PLAIN, 14));
-        lblSubtitulo.setForeground(new Color(180, 180, 180));
-        lblSubtitulo.setAlignmentX(Component.LEFT_ALIGNMENT);
-
-        panelIzquierdo.add(lblTitulo);
-        panelIzquierdo.add(Box.createVerticalStrut(5));
-        panelIzquierdo.add(lblSubtitulo);
-
-        JPanel panelDerecho = new JPanel(new FlowLayout(FlowLayout.RIGHT));
-        panelDerecho.setBackground(new Color(30, 30, 30));
-
-        JLabel lblPuntos = new JLabel("Puntos: " + puntosUsuario);
-        lblPuntos.setFont(new Font("Segoe UI", Font.BOLD, 18));
+    if (mostrarPuntos) {
+        panelInfo.add(Box.createVerticalStrut(3));
+        JLabel lblPuntos = new JLabel(puntos + " puntos");
+        lblPuntos.setFont(new Font("Segoe UI", Font.BOLD, 12));
         lblPuntos.setForeground(new Color(220, 20, 60));
-        panelDerecho.add(lblPuntos);
-
-        panelSuperior.add(panelIzquierdo, BorderLayout.CENTER);
-        panelSuperior.add(panelDerecho, BorderLayout.EAST);
-
-        JPanel panelTabla = new JPanel();
-        panelTabla.setBackground(new Color(40, 40, 40));
-        panelTabla.setLayout(new BorderLayout());
-        panelTabla.setBorder(BorderFactory.createEmptyBorder(20, 40, 20, 40));
-
-        JPanel panelEncabezados = new JPanel(new GridLayout(1, 3));
-        panelEncabezados.setBackground(new Color(40, 40, 40));
-        panelEncabezados.setBorder(BorderFactory.createEmptyBorder(0, 0, 15, 0));
-
-        JLabel lblFecha = new JLabel("Fecha");
-        lblFecha.setFont(new Font("Segoe UI", Font.BOLD, 13));
-        lblFecha.setForeground(new Color(200, 200, 200));
-
-        JLabel lblDescripcion = new JLabel("Descripción");
-        lblDescripcion.setFont(new Font("Segoe UI", Font.BOLD, 13));
-        lblDescripcion.setForeground(new Color(200, 200, 200));
-
-        JLabel lblPrecio = new JLabel("Precio", SwingConstants.RIGHT);
-        lblPrecio.setFont(new Font("Segoe UI", Font.BOLD, 13));
-        lblPrecio.setForeground(new Color(200, 200, 200));
-
-        panelEncabezados.add(lblFecha);
-        panelEncabezados.add(lblDescripcion);
-        panelEncabezados.add(lblPrecio);
-
-        JPanel panelCompras = new JPanel();
-        panelCompras.setLayout(new BoxLayout(panelCompras, BoxLayout.Y_AXIS));
-        panelCompras.setBackground(new Color(40, 40, 40));
-
-        ResultSet rs = sistemaLogin.getDbHelper().obtenerHistorialCompras(usuarioActual.getCorreo());
-        java.text.SimpleDateFormat sdf = new java.text.SimpleDateFormat("dd/MM/yy");
-        double totalGastado = 0;
-        boolean hayCompras = false;
-
-        try {
-            while (rs != null && rs.next()) {
-                hayCompras = true;
-
-                Timestamp fecha = rs.getTimestamp("Fecha");
-                String descripcion = rs.getString("Descripcion");
-                double precio = rs.getDouble("Precio");
-                totalGastado += precio;
-
-                JPanel panelFila = new JPanel(new GridLayout(1, 3));
-                panelFila.setBackground(new Color(40, 40, 40));
-                panelFila.setBorder(BorderFactory.createEmptyBorder(12, 0, 12, 0));
-                panelFila.setMaximumSize(new Dimension(Integer.MAX_VALUE, 50));
-
-                JLabel fechaLabel = new JLabel(sdf.format(fecha));
-                fechaLabel.setFont(new Font("Segoe UI", Font.PLAIN, 13));
-                fechaLabel.setForeground(Color.WHITE);
-
-                JLabel descripcionLabel = new JLabel(descripcion);
-                descripcionLabel.setFont(new Font("Segoe UI", Font.PLAIN, 13));
-                descripcionLabel.setForeground(Color.WHITE);
-
-                JLabel precioLabel = new JLabel(String.format("$%.2f", precio), SwingConstants.RIGHT);
-                precioLabel.setFont(new Font("Segoe UI", Font.PLAIN, 13));
-                precioLabel.setForeground(Color.WHITE);
-
-                panelFila.add(fechaLabel);
-                panelFila.add(descripcionLabel);
-                panelFila.add(precioLabel);
-
-                panelCompras.add(panelFila);
-
-                JSeparator separador = new JSeparator();
-                separador.setForeground(new Color(60, 60, 60));
-                separador.setMaximumSize(new Dimension(Integer.MAX_VALUE, 1));
-                panelCompras.add(separador);
-            }
-
-            if (rs != null) {
-                rs.close();
-            }
-        } catch (SQLException e) {
-            e.printStackTrace();
-            JOptionPane.showMessageDialog(this, "Error al cargar el historial de compras.");
-        }
-
-        if (!hayCompras) {
-            JLabel lblSinCompras = new JLabel("No tienes compras registradas aún.");
-            lblSinCompras.setFont(new Font("Segoe UI", Font.PLAIN, 16));
-            lblSinCompras.setForeground(new Color(150, 150, 150));
-            lblSinCompras.setHorizontalAlignment(SwingConstants.CENTER);
-            panelTabla.add(lblSinCompras, BorderLayout.CENTER);
-        } else {
-            JScrollPane scrollCompras = new JScrollPane(panelCompras);
-            scrollCompras.setBorder(null);
-            scrollCompras.setBackground(new Color(40, 40, 40));
-            scrollCompras.getViewport().setBackground(new Color(40, 40, 40));
-
-            panelTabla.add(panelEncabezados, BorderLayout.NORTH);
-            panelTabla.add(scrollCompras, BorderLayout.CENTER);
-
-            JPanel panelInferior = new JPanel(new FlowLayout(FlowLayout.RIGHT));
-            panelInferior.setBackground(new Color(40, 40, 40));
-            panelInferior.setBorder(BorderFactory.createEmptyBorder(10, 40, 20, 40));
-
-            JLabel lblTotal = new JLabel(String.format("TOTAL: $%.2f", totalGastado));
-            lblTotal.setFont(new Font("Segoe UI", Font.BOLD, 16));
-            lblTotal.setForeground(Color.WHITE);
-            panelInferior.add(lblTotal);
-
-            panelTabla.add(panelInferior, BorderLayout.SOUTH);
-        }
-
-        panelPrincipal.add(panelSuperior, BorderLayout.NORTH);
-        panelPrincipal.add(panelTabla, BorderLayout.CENTER);
-
-        panelContenido.add(panelPrincipal, BorderLayout.CENTER);
-        panelContenido.revalidate();
-        panelContenido.repaint();
+        lblPuntos.setAlignmentX(Component.CENTER_ALIGNMENT);
+        panelInfo.add(lblPuntos);
     }
+
+    panel.add(radio, BorderLayout.NORTH);
+    panel.add(panelImagenContainer, BorderLayout.CENTER);
+    panel.add(panelInfo, BorderLayout.SOUTH);
+
+    // Click en toda la tarjeta
+    MouseAdapter clickListener = new MouseAdapter() {
+        @Override
+        public void mouseClicked(MouseEvent e) {
+            radio.setSelected(true);
+        }
+        
+        @Override
+        public void mouseEntered(MouseEvent e) {
+            panel.setBackground(new Color(35, 35, 35));
+            panelImagenContainer.setBackground(new Color(35, 35, 35));
+            panelInfo.setBackground(new Color(35, 35, 35));
+            radio.setBackground(new Color(35, 35, 35));
+        }
+        
+        @Override
+        public void mouseExited(MouseEvent e) {
+            panel.setBackground(new Color(30, 30, 30));
+            panelImagenContainer.setBackground(new Color(30, 30, 30));
+            panelInfo.setBackground(new Color(30, 30, 30));
+            radio.setBackground(new Color(30, 30, 30));
+        }
+    };
+
+    panel.addMouseListener(clickListener);
+    panelImagenContainer.addMouseListener(clickListener);
+    lblImagen.addMouseListener(clickListener);
+    panelInfo.addMouseListener(clickListener);
+
+    return panel;
+}
+
+private void mostrarHistorial() {
+    // Recargar puntos desde la BD
+    puntosUsuario = sistemaLogin.getDbHelper().obtenerPuntosCliente(usuarioActual.getCorreo());
+    
+    panelContenido.removeAll();
+    panelContenido.setLayout(new BorderLayout());
+
+    JPanel panelPrincipal = new JPanel();
+    panelPrincipal.setLayout(new BorderLayout());
+    panelPrincipal.setBackground(new Color(30, 30, 30));
+
+    JPanel panelSuperior = new JPanel();
+    panelSuperior.setBackground(new Color(30, 30, 30));
+    panelSuperior.setLayout(new BorderLayout());
+    panelSuperior.setBorder(BorderFactory.createEmptyBorder(30, 40, 20, 40));
+
+    JPanel panelIzquierdo = new JPanel();
+    panelIzquierdo.setLayout(new BoxLayout(panelIzquierdo, BoxLayout.Y_AXIS));
+    panelIzquierdo.setBackground(new Color(30, 30, 30));
+
+    JLabel lblTitulo = new JLabel("Mis compras");
+    lblTitulo.setFont(new Font("Segoe UI", Font.BOLD, 28));
+    lblTitulo.setForeground(Color.WHITE);
+    lblTitulo.setAlignmentX(Component.LEFT_ALIGNMENT);
+
+    JLabel lblSubtitulo = new JLabel("Consulta el historial de compras realizadas en tu cuenta.");
+    lblSubtitulo.setFont(new Font("Segoe UI", Font.PLAIN, 14));
+    lblSubtitulo.setForeground(new Color(180, 180, 180));
+    lblSubtitulo.setAlignmentX(Component.LEFT_ALIGNMENT);
+
+    panelIzquierdo.add(lblTitulo);
+    panelIzquierdo.add(Box.createVerticalStrut(5));
+    panelIzquierdo.add(lblSubtitulo);
+
+    JPanel panelDerecho = new JPanel(new FlowLayout(FlowLayout.RIGHT));
+    panelDerecho.setBackground(new Color(30, 30, 30));
+
+    JLabel lblPuntos = new JLabel("Puntos: " + puntosUsuario);
+    lblPuntos.setFont(new Font("Segoe UI", Font.BOLD, 18));
+    lblPuntos.setForeground(new Color(220, 20, 60));
+    panelDerecho.add(lblPuntos);
+
+    panelSuperior.add(panelIzquierdo, BorderLayout.CENTER);
+    panelSuperior.add(panelDerecho, BorderLayout.EAST);
+
+    JPanel panelTabla = new JPanel();
+    panelTabla.setBackground(new Color(40, 40, 40));
+    panelTabla.setLayout(new BorderLayout());
+    panelTabla.setBorder(BorderFactory.createEmptyBorder(20, 40, 20, 40));
+
+    JPanel panelEncabezados = new JPanel(new GridLayout(1, 3));
+    panelEncabezados.setBackground(new Color(40, 40, 40));
+    panelEncabezados.setBorder(BorderFactory.createEmptyBorder(0, 0, 15, 0));
+
+    JLabel lblFecha = new JLabel("Fecha");
+    lblFecha.setFont(new Font("Segoe UI", Font.BOLD, 13));
+    lblFecha.setForeground(new Color(200, 200, 200));
+
+    JLabel lblDescripcion = new JLabel("Descripción");
+    lblDescripcion.setFont(new Font("Segoe UI", Font.BOLD, 13));
+    lblDescripcion.setForeground(new Color(200, 200, 200));
+
+    JLabel lblPrecio = new JLabel("Precio", SwingConstants.RIGHT);
+    lblPrecio.setFont(new Font("Segoe UI", Font.BOLD, 13));
+    lblPrecio.setForeground(new Color(200, 200, 200));
+
+    panelEncabezados.add(lblFecha);
+    panelEncabezados.add(lblDescripcion);
+    panelEncabezados.add(lblPrecio);
+
+    JPanel panelCompras = new JPanel();
+    panelCompras.setLayout(new BoxLayout(panelCompras, BoxLayout.Y_AXIS));
+    panelCompras.setBackground(new Color(40, 40, 40));
+
+    ResultSet rs = sistemaLogin.getDbHelper().obtenerHistorialCompras(usuarioActual.getCorreo());
+    java.text.SimpleDateFormat sdf = new java.text.SimpleDateFormat("dd/MM/yy");
+    double totalGastado = 0;
+    boolean hayCompras = false;
+
+    try {
+        while (rs != null && rs.next()) {
+            hayCompras = true;
+
+            Timestamp fecha = rs.getTimestamp("Fecha");
+            String descripcion = rs.getString("Descripcion");
+            double precio = rs.getDouble("Precio");
+            String tipo = rs.getString("Tipo");
+            int puntosGastados = rs.getInt("PuntosGastados");
+            
+            // Solo sumar al total si NO es un canje
+            if (!"CANJE".equals(tipo)) {
+                totalGastado += precio;
+            }
+
+            JPanel panelFila = new JPanel(new GridLayout(1, 3));
+            panelFila.setBackground(new Color(40, 40, 40));
+            panelFila.setBorder(BorderFactory.createEmptyBorder(12, 0, 12, 0));
+            panelFila.setMaximumSize(new Dimension(Integer.MAX_VALUE, 50));
+
+            JLabel fechaLabel = new JLabel(sdf.format(fecha));
+            fechaLabel.setFont(new Font("Segoe UI", Font.PLAIN, 13));
+            fechaLabel.setForeground(Color.WHITE);
+
+            JLabel descripcionLabel = new JLabel(descripcion);
+            descripcionLabel.setFont(new Font("Segoe UI", Font.PLAIN, 13));
+            // Cambiar color si es un canje
+            if ("CANJE".equals(tipo)) {
+                descripcionLabel.setForeground(new Color(76, 175, 80)); // Verde para canjes
+            } else {
+                descripcionLabel.setForeground(Color.WHITE);
+            }
+
+            // Mostrar puntos para canjes, precio para compras normales
+            String precioTexto;
+            if ("CANJE".equals(tipo)) {
+                precioTexto = puntosGastados + " pts";
+            } else {
+                precioTexto = String.format("$%.2f", precio);
+            }
+            
+            JLabel precioLabel = new JLabel(precioTexto, SwingConstants.RIGHT);
+            precioLabel.setFont(new Font("Segoe UI", Font.PLAIN, 13));
+            // Cambiar color si es un canje
+            if ("CANJE".equals(tipo)) {
+                precioLabel.setForeground(new Color(76, 175, 80)); // Verde para canjes
+            } else {
+                precioLabel.setForeground(Color.WHITE);
+            }
+
+            panelFila.add(fechaLabel);
+            panelFila.add(descripcionLabel);
+            panelFila.add(precioLabel);
+
+            panelCompras.add(panelFila);
+
+            JSeparator separador = new JSeparator();
+            separador.setForeground(new Color(60, 60, 60));
+            separador.setMaximumSize(new Dimension(Integer.MAX_VALUE, 1));
+            panelCompras.add(separador);
+        }
+
+        if (rs != null) {
+            rs.close();
+        }
+    } catch (SQLException e) {
+        e.printStackTrace();
+        JOptionPane.showMessageDialog(this, "Error al cargar el historial de compras: " + e.getMessage());
+    }
+
+    // SI NO HAY COMPRAS, MOSTRAR MENSAJE
+    if (!hayCompras) {
+        JLabel lblSinCompras = new JLabel("No tienes compras registradas aún.");
+        lblSinCompras.setFont(new Font("Segoe UI", Font.PLAIN, 16));
+        lblSinCompras.setForeground(new Color(150, 150, 150));
+        lblSinCompras.setHorizontalAlignment(SwingConstants.CENTER);
+        panelTabla.add(lblSinCompras, BorderLayout.CENTER);
+    } else {
+        // MOSTRAR COMPRAS Y TOTAL
+        JScrollPane scrollCompras = new JScrollPane(panelCompras);
+        scrollCompras.setBorder(null);
+        scrollCompras.setBackground(new Color(40, 40, 40));
+        scrollCompras.getViewport().setBackground(new Color(40, 40, 40));
+
+        // Panel inferior con el total
+        JPanel panelInferior = new JPanel(new FlowLayout(FlowLayout.RIGHT));
+        panelInferior.setBackground(new Color(40, 40, 40));
+        panelInferior.setBorder(BorderFactory.createEmptyBorder(15, 0, 0, 0));
+
+        JLabel lblTotal = new JLabel("Total gastado: $" + String.format("%.2f", totalGastado));
+        lblTotal.setFont(new Font("Segoe UI", Font.BOLD, 16));
+        lblTotal.setForeground(Color.WHITE);
+        panelInferior.add(lblTotal);
+
+        panelTabla.add(panelEncabezados, BorderLayout.NORTH);
+        panelTabla.add(scrollCompras, BorderLayout.CENTER);
+        panelTabla.add(panelInferior, BorderLayout.SOUTH);
+    }
+
+    panelPrincipal.add(panelSuperior, BorderLayout.NORTH);
+    panelPrincipal.add(panelTabla, BorderLayout.CENTER);
+
+    panelContenido.add(panelPrincipal, BorderLayout.CENTER);
+    panelContenido.revalidate();
+    panelContenido.repaint();
+}
 
     private void mostrarPerfil() {
         panelContenido.removeAll();
@@ -1067,7 +1091,19 @@ public class VentanaPrincipal extends JFrame {
                 mostrarMensajeError("Todos los campos son obligatorios", lblMensajeError, panelBotones);
                 return;
             }
-
+            if (!validarSoloLetras(nuevoNombre)) {
+            mostrarMensajeError("El nombre solo puede contener letras", lblMensajeError, panelBotones);
+            return;
+            }   
+            if (!validarSoloLetras(nuevoApellido)) {
+            mostrarMensajeError("El apellido solo puede contener letras", lblMensajeError, panelBotones);
+            return;
+            }
+            if (nuevaPass.length() < 6) {
+                mostrarMensajeError("La contraseña debe tener al menos 6 caracteres", lblMensajeError, panelBotones);
+                return;
+            }
+            
             int nuevoDNI;
             try {
                 nuevoDNI = Integer.parseInt(nuevoDNIStr);
@@ -1147,7 +1183,7 @@ public class VentanaPrincipal extends JFrame {
 
                 // Mostrar mensaje de éxito elegante
                 if (lblMensajeExito[0] == null) {
-                    lblMensajeExito[0] = new JLabel("✓ Datos guardados correctamente");
+                    lblMensajeExito[0] = new JLabel("Datos guardados correctamente");
                     lblMensajeExito[0].setFont(new Font("Segoe UI", Font.BOLD, 14));
                     lblMensajeExito[0].setForeground(new Color(76, 175, 80));
                     lblMensajeExito[0].setAlignmentX(Component.LEFT_ALIGNMENT);
@@ -1270,7 +1306,7 @@ public class VentanaPrincipal extends JFrame {
 
     private void mostrarPantallaLogin() {
         JDialog dialog = new JDialog((Frame)null, "Iniciar Sesión", true);
-        dialog.setSize(600, 700);
+        dialog.setSize(1366, 768);
         dialog.setLocationRelativeTo(null);
         dialog.setDefaultCloseOperation(JDialog.DO_NOTHING_ON_CLOSE);
         dialog.getContentPane().setBackground(new Color(50, 50, 50));
@@ -1297,479 +1333,875 @@ public class VentanaPrincipal extends JFrame {
         dialog.setVisible(true);
     }
 
-    private JPanel crearPanelLogin(JDialog dialog, JPanel panelContenedor) {
-        JPanel panelPrincipal = new JPanel();
-        panelPrincipal.setLayout(new BoxLayout(panelPrincipal, BoxLayout.Y_AXIS));
-        panelPrincipal.setBackground(new Color(50, 50, 50));
-        panelPrincipal.setBorder(BorderFactory.createEmptyBorder(30, 0, 30, 0));
+private JPanel crearPanelLogin(JDialog dialog, JPanel panelContenedor) {
+    JPanel panelPrincipal = new JPanel();
+    panelPrincipal.setLayout(new BoxLayout(panelPrincipal, BoxLayout.Y_AXIS));
+    panelPrincipal.setBackground(new Color(15, 15, 15));
+    panelPrincipal.setBorder(BorderFactory.createEmptyBorder(40, 0, 40, 0));
 
-        JLabel lblLogo = new JLabel("CINEMARX", SwingConstants.CENTER);
-        lblLogo.setFont(new Font("Segoe UI", Font.BOLD, 32));
-        lblLogo.setForeground(Color.WHITE);
-        lblLogo.setAlignmentX(Component.CENTER_ALIGNMENT);
+    // LOGO ELEGANTE
+JLabel lblLogo = new JLabel();
+lblLogo.setHorizontalAlignment(SwingConstants.CENTER);
+try {
+    java.net.URL url = new java.net.URL("https://gaelschenone.aguilucho.ar/source_cmx/index.php?preview=logos%2FCINEMARX%20logotipo.png");
+    ImageIcon icon = new ImageIcon(url);
+    
+    // ✅ CORRECCIÓN: Calcular altura proporcional
+    int anchoOriginal = icon.getIconWidth();
+    int altoOriginal = icon.getIconHeight();
+    int anchoDeseado = 220;
+    int altoDeseado = (altoOriginal * anchoDeseado) / anchoOriginal;
+    
+    Image img = icon.getImage().getScaledInstance(anchoDeseado, altoDeseado, Image.SCALE_SMOOTH);
+    lblLogo.setIcon(new ImageIcon(img));
+} catch (Exception e) {
+    lblLogo.setText("CINEMARX");
+    lblLogo.setFont(new Font("Segoe UI", Font.BOLD, 22));
+    lblLogo.setForeground(new Color(220, 20, 60));
+}
+lblLogo.setAlignmentX(Component.CENTER_ALIGNMENT);
+lblLogo.setBorder(BorderFactory.createEmptyBorder(0, 0, 15, 0));
 
-        JPanel panelNegro = new JPanel();
-        panelNegro.setBackground(new Color(20, 20, 20));
-        panelNegro.setLayout(null);
-        panelNegro.setPreferredSize(new Dimension(500, 400));
-        panelNegro.setMaximumSize(new Dimension(500, 400));
+    // PANEL PRINCIPAL CON DISEÑO PREMIUM
+    JPanel panelContenido = new JPanel();
+    panelContenido.setBackground(new Color(25, 25, 28));
+    panelContenido.setLayout(new BoxLayout(panelContenido, BoxLayout.Y_AXIS));
+    panelContenido.setBorder(BorderFactory.createCompoundBorder(
+        BorderFactory.createLineBorder(new Color(40, 40, 45), 1),
+        BorderFactory.createEmptyBorder(45, 60, 45, 60)
+    ));
+    panelContenido.setMaximumSize(new Dimension(480, 450));
+    panelContenido.setAlignmentX(Component.CENTER_ALIGNMENT);
 
-        JLabel lblTituloLogin = new JLabel("Hola! Que bueno verte por aca.", SwingConstants.CENTER);
-        lblTituloLogin.setForeground(Color.WHITE);
-        lblTituloLogin.setFont(new Font("Segoe UI", Font.BOLD, 18));
-        lblTituloLogin.setBounds(0, 40, 500, 30);
-        panelNegro.add(lblTituloLogin);
+    // TÍTULO Y SUBTÍTULO
+    JLabel lblTitulo = new JLabel("Bienvenido de vuelta");
+    lblTitulo.setForeground(Color.WHITE);
+    lblTitulo.setFont(new Font("Segoe UI", Font.BOLD, 28));
+    lblTitulo.setAlignmentX(Component.CENTER_ALIGNMENT);
 
-        JLabel lblCorreoLabelLogin = new JLabel("Correo electrónico");
-        lblCorreoLabelLogin.setForeground(new Color(180, 180, 180));
-        lblCorreoLabelLogin.setFont(new Font("Segoe UI", Font.PLAIN, 12));
-        lblCorreoLabelLogin.setBounds(100, 100, 300, 15);
-        panelNegro.add(lblCorreoLabelLogin);
+    JLabel lblSubtitulo = new JLabel("Ingresa a tu cuenta para continuar");
+    lblSubtitulo.setForeground(new Color(160, 160, 165));
+    lblSubtitulo.setFont(new Font("Segoe UI", Font.PLAIN, 13));
+    lblSubtitulo.setAlignmentX(Component.CENTER_ALIGNMENT);
 
-        JTextField txtCorreoLogin = new JTextField();
-        txtCorreoLogin.setBounds(100, 115, 300, 45);
-        txtCorreoLogin.setBackground(new Color(35, 35, 35));
-        txtCorreoLogin.setForeground(Color.WHITE);
-        txtCorreoLogin.setCaretColor(Color.WHITE);
-        txtCorreoLogin.setFont(new Font("Segoe UI", Font.PLAIN, 14));
-        txtCorreoLogin.setBorder(BorderFactory.createCompoundBorder(
-            BorderFactory.createLineBorder(new Color(60, 60, 60)),
-            BorderFactory.createEmptyBorder(5, 10, 5, 10)));
-        panelNegro.add(txtCorreoLogin);
+    panelContenido.add(lblTitulo);
+    panelContenido.add(Box.createVerticalStrut(8));
+    panelContenido.add(lblSubtitulo);
+    panelContenido.add(Box.createVerticalStrut(35));
 
-        JLabel lblPassLabelLogin = new JLabel("Contraseña");
-        lblPassLabelLogin.setForeground(new Color(180, 180, 180));
-        lblPassLabelLogin.setFont(new Font("Segoe UI", Font.PLAIN, 12));
-        lblPassLabelLogin.setBounds(100, 175, 300, 15);
-        panelNegro.add(lblPassLabelLogin);
+    // CORREO ELECTRÓNICO
+    JLabel lblCorreoLabel = new JLabel("Correo electrónico");
+    lblCorreoLabel.setForeground(new Color(200, 200, 205));
+    lblCorreoLabel.setFont(new Font("Segoe UI", Font.BOLD, 11));
+    lblCorreoLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
 
-        JPasswordField txtPassLogin = new JPasswordField();
-        txtPassLogin.setBounds(100, 190, 300, 45);
-        txtPassLogin.setBackground(new Color(35, 35, 35));
-        txtPassLogin.setForeground(Color.WHITE);
-        txtPassLogin.setCaretColor(Color.WHITE);
-        txtPassLogin.setFont(new Font("Segoe UI", Font.PLAIN, 14));
-        txtPassLogin.setBorder(BorderFactory.createCompoundBorder(
-            BorderFactory.createLineBorder(new Color(60, 60, 60)),
-            BorderFactory.createEmptyBorder(5, 10, 5, 10)));
-        panelNegro.add(txtPassLogin);
+    JTextField txtCorreoLogin = new JTextField();
+    txtCorreoLogin.setMaximumSize(new Dimension(360, 48));
+    txtCorreoLogin.setBackground(new Color(18, 18, 20));
+    txtCorreoLogin.setForeground(Color.WHITE);
+    txtCorreoLogin.setCaretColor(new Color(220, 20, 60));
+    txtCorreoLogin.setFont(new Font("Segoe UI", Font.PLAIN, 14));
+    txtCorreoLogin.setBorder(BorderFactory.createCompoundBorder(
+        BorderFactory.createLineBorder(new Color(50, 50, 55), 1),
+        BorderFactory.createEmptyBorder(10, 16, 10, 16)));
+    txtCorreoLogin.setAlignmentX(Component.CENTER_ALIGNMENT);
 
-        JButton btnIniciar = new JButton("Iniciar Sesión");
-        btnIniciar.setBounds(100, 260, 300, 45);
-        btnIniciar.setBackground(new Color(220, 20, 60));
-        btnIniciar.setForeground(Color.WHITE);
-        btnIniciar.setFont(new Font("Segoe UI", Font.BOLD, 14));
-        btnIniciar.setFocusPainted(false);
-        btnIniciar.setBorderPainted(false);
-        btnIniciar.setCursor(new Cursor(Cursor.HAND_CURSOR));
-        panelNegro.add(btnIniciar);
+    txtCorreoLogin.addFocusListener(new FocusAdapter() {
+        @Override
+        public void focusGained(FocusEvent e) {
+            txtCorreoLogin.setBorder(BorderFactory.createCompoundBorder(
+                BorderFactory.createLineBorder(new Color(220, 20, 60), 2),
+                BorderFactory.createEmptyBorder(10, 16, 10, 16)));
+        }
+        @Override
+        public void focusLost(FocusEvent e) {
+            txtCorreoLogin.setBorder(BorderFactory.createCompoundBorder(
+                BorderFactory.createLineBorder(new Color(50, 50, 55), 1),
+                BorderFactory.createEmptyBorder(10, 16, 10, 16)));
+        }
+    });
 
-        JButton btnRegistrarse = new JButton("Registrarse");
-        btnRegistrarse.setBounds(100, 320, 300, 45);
-        btnRegistrarse.setBackground(new Color(60, 60, 60));
-        btnRegistrarse.setForeground(Color.WHITE);
-        btnRegistrarse.setFont(new Font("Segoe UI", Font.BOLD, 14));
-        btnRegistrarse.setFocusPainted(false);
-        btnRegistrarse.setBorderPainted(false);
-        btnRegistrarse.setCursor(new Cursor(Cursor.HAND_CURSOR));
-        panelNegro.add(btnRegistrarse);
+    panelContenido.add(lblCorreoLabel);
+    panelContenido.add(Box.createVerticalStrut(8));
+    panelContenido.add(txtCorreoLogin);
+    panelContenido.add(Box.createVerticalStrut(20));
 
-        panelPrincipal.add(lblLogo);
-        panelPrincipal.add(Box.createVerticalStrut(20));
-        panelPrincipal.add(panelNegro);
+    // CONTRASEÑA
+    JLabel lblPassLabel = new JLabel("Contraseña");
+    lblPassLabel.setForeground(new Color(200, 200, 205));
+    lblPassLabel.setFont(new Font("Segoe UI", Font.BOLD, 11));
+    lblPassLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
 
-        btnRegistrarse.addActionListener(e -> {
-            CardLayout cl = (CardLayout) panelContenedor.getLayout();
-            cl.show(panelContenedor, "REGISTRO");
-        });
+    JPasswordField txtPassLogin = new JPasswordField();
+    txtPassLogin.setMaximumSize(new Dimension(360, 48));
+    txtPassLogin.setBackground(new Color(18, 18, 20));
+    txtPassLogin.setForeground(Color.WHITE);
+    txtPassLogin.setCaretColor(new Color(220, 20, 60));
+    txtPassLogin.setFont(new Font("Segoe UI", Font.PLAIN, 14));
+    txtPassLogin.setBorder(BorderFactory.createCompoundBorder(
+        BorderFactory.createLineBorder(new Color(50, 50, 55), 1),
+        BorderFactory.createEmptyBorder(10, 16, 10, 16)));
+    txtPassLogin.setAlignmentX(Component.CENTER_ALIGNMENT);
 
-        btnIniciar.addActionListener(e -> {
-            String correo = txtCorreoLogin.getText().trim();
-            String pass = new String(txtPassLogin.getPassword()).trim();
+    txtPassLogin.addFocusListener(new FocusAdapter() {
+        @Override
+        public void focusGained(FocusEvent e) {
+            txtPassLogin.setBorder(BorderFactory.createCompoundBorder(
+                BorderFactory.createLineBorder(new Color(220, 20, 60), 2),
+                BorderFactory.createEmptyBorder(10, 16, 10, 16)));
+        }
+        @Override
+        public void focusLost(FocusEvent e) {
+            txtPassLogin.setBorder(BorderFactory.createCompoundBorder(
+                BorderFactory.createLineBorder(new Color(50, 50, 55), 1),
+                BorderFactory.createEmptyBorder(10, 16, 10, 16)));
+        }
+    });
 
-            if (correo.isEmpty() || pass.isEmpty()) {
-                JOptionPane.showMessageDialog(dialog, "Complete ambos campos.");
+    panelContenido.add(lblPassLabel);
+    panelContenido.add(Box.createVerticalStrut(8));
+    panelContenido.add(txtPassLogin);
+    panelContenido.add(Box.createVerticalStrut(30));
+
+    // BOTÓN INICIAR SESIÓN - PREMIUM
+    JButton btnIniciar = new JButton("Iniciar sesión");
+    btnIniciar.setMaximumSize(new Dimension(360, 50));
+    btnIniciar.setAlignmentX(Component.CENTER_ALIGNMENT);
+    btnIniciar.setBackground(new Color(220, 20, 60));
+    btnIniciar.setForeground(Color.WHITE);
+    btnIniciar.setFont(new Font("Segoe UI", Font.BOLD, 15));
+    btnIniciar.setFocusPainted(false);
+    btnIniciar.setBorderPainted(false);
+    btnIniciar.setCursor(new Cursor(Cursor.HAND_CURSOR));
+
+    btnIniciar.addMouseListener(new MouseAdapter() {
+        @Override
+        public void mouseEntered(MouseEvent e) {
+            btnIniciar.setBackground(new Color(200, 15, 50));
+        }
+        @Override
+        public void mouseExited(MouseEvent e) {
+            btnIniciar.setBackground(new Color(220, 20, 60));
+        }
+    });
+
+    panelContenido.add(btnIniciar);
+    panelContenido.add(Box.createVerticalStrut(20));
+
+    // SEPARADOR CON "O"
+    JPanel panelSeparador = new JPanel();
+    panelSeparador.setLayout(new BoxLayout(panelSeparador, BoxLayout.X_AXIS));
+    panelSeparador.setBackground(new Color(25, 25, 28));
+    panelSeparador.setMaximumSize(new Dimension(360, 20));
+    panelSeparador.setAlignmentX(Component.CENTER_ALIGNMENT);
+
+    JSeparator sep1 = new JSeparator();
+    sep1.setForeground(new Color(50, 50, 55));
+    sep1.setMaximumSize(new Dimension(150, 1));
+
+    JLabel lblO = new JLabel("  o  ");
+    lblO.setForeground(new Color(120, 120, 125));
+    lblO.setFont(new Font("Segoe UI", Font.PLAIN, 12));
+
+    JSeparator sep2 = new JSeparator();
+    sep2.setForeground(new Color(50, 50, 55));
+    sep2.setMaximumSize(new Dimension(150, 1));
+
+    panelSeparador.add(sep1);
+    panelSeparador.add(lblO);
+    panelSeparador.add(sep2);
+
+    panelContenido.add(panelSeparador);
+    panelContenido.add(Box.createVerticalStrut(20));
+
+    // TEXTO "¿NO TIENES CUENTA?"
+    JPanel panelNoTienesCuenta = new JPanel(new FlowLayout(FlowLayout.CENTER, 5, 0));
+    panelNoTienesCuenta.setBackground(new Color(25, 25, 28));
+    panelNoTienesCuenta.setMaximumSize(new Dimension(360, 30));
+    panelNoTienesCuenta.setAlignmentX(Component.CENTER_ALIGNMENT);
+
+    JLabel lblNoTienesCuenta = new JLabel("¿No tienes cuenta?");
+    lblNoTienesCuenta.setForeground(new Color(160, 160, 165));
+    lblNoTienesCuenta.setFont(new Font("Segoe UI", Font.PLAIN, 13));
+
+    JButton btnRegistrarse = new JButton("Regístrate");
+    btnRegistrarse.setForeground(new Color(220, 20, 60));
+    btnRegistrarse.setFont(new Font("Segoe UI", Font.BOLD, 13));
+    btnRegistrarse.setFocusPainted(false);
+    btnRegistrarse.setBorderPainted(false);
+    btnRegistrarse.setContentAreaFilled(false);
+    btnRegistrarse.setCursor(new Cursor(Cursor.HAND_CURSOR));
+
+    btnRegistrarse.addMouseListener(new MouseAdapter() {
+        @Override
+        public void mouseEntered(MouseEvent e) {
+            btnRegistrarse.setForeground(new Color(200, 15, 50));
+        }
+        @Override
+        public void mouseExited(MouseEvent e) {
+            btnRegistrarse.setForeground(new Color(220, 20, 60));
+        }
+    });
+
+    panelNoTienesCuenta.add(lblNoTienesCuenta);
+    panelNoTienesCuenta.add(btnRegistrarse);
+
+    panelContenido.add(panelNoTienesCuenta);
+
+    panelPrincipal.add(lblLogo);
+    panelPrincipal.add(panelContenido);
+
+    // EVENTOS
+    btnRegistrarse.addActionListener(e -> {
+        CardLayout cl = (CardLayout) panelContenedor.getLayout();
+        cl.show(panelContenedor, "REGISTRO");
+    });
+
+    btnIniciar.addActionListener(e -> {
+        String correo = txtCorreoLogin.getText().trim();
+        String pass = new String(txtPassLogin.getPassword()).trim();
+
+        if (correo.isEmpty() || pass.isEmpty()) {
+            JOptionPane.showMessageDialog(dialog, 
+                "Por favor, completa todos los campos", 
+                "Campos vacíos", 
+                JOptionPane.WARNING_MESSAGE);
+            return;
+        }
+
+        btnIniciar.setEnabled(false);
+        btnIniciar.setText("Iniciando...");
+        btnIniciar.setBackground(new Color(150, 150, 150));
+
+        if (sistemaLogin.iniciarSesion(correo, pass)) {
+            usuarioActual = sistemaLogin.getUsuarioActual();
+            dialog.dispose();
+            crearInterfazPrincipal();
+            setVisible(true);
+            mostrarPerfil();
+        } else {
+            JOptionPane.showMessageDialog(dialog, 
+                "Correo o contraseña incorrectos.\n\nVerifica tus datos e intenta nuevamente.", 
+                "Error de inicio de sesión", 
+                JOptionPane.ERROR_MESSAGE);
+            
+            btnIniciar.setEnabled(true);
+            btnIniciar.setText("Iniciar sesión");
+            btnIniciar.setBackground(new Color(220, 20, 60));
+        }
+    });
+
+    // Enter para iniciar sesión
+    txtPassLogin.addActionListener(e -> btnIniciar.doClick());
+
+    return panelPrincipal;
+}
+
+private JPanel crearPanelRegistro(JDialog dialog, JPanel panelContenedor) {
+    JPanel panelPrincipal = new JPanel();
+    panelPrincipal.setLayout(new BoxLayout(panelPrincipal, BoxLayout.Y_AXIS));
+    panelPrincipal.setBackground(new Color(15, 15, 15));
+    panelPrincipal.setBorder(BorderFactory.createEmptyBorder(20, 0, 20, 0));
+
+    // LOGO ELEGANTE
+JLabel lblLogo = new JLabel();
+lblLogo.setHorizontalAlignment(SwingConstants.CENTER);
+try {
+    java.net.URL url = new java.net.URL("https://gaelschenone.aguilucho.ar/source_cmx/index.php?preview=logos%2FCINEMARX%20logotipo.png");
+    ImageIcon icon = new ImageIcon(url);
+    
+    // ✅ CORRECCIÓN: Calcular altura proporcional
+    int anchoOriginal = icon.getIconWidth();
+    int altoOriginal = icon.getIconHeight();
+    int anchoDeseado = 250;
+    int altoDeseado = (altoOriginal * anchoDeseado) / anchoOriginal;
+    
+    Image img = icon.getImage().getScaledInstance(anchoDeseado, altoDeseado, Image.SCALE_SMOOTH);
+    lblLogo.setIcon(new ImageIcon(img));
+} catch (Exception e) {
+    lblLogo.setText("CINEMARX");
+    lblLogo.setFont(new Font("Segoe UI", Font.BOLD, 24));
+    lblLogo.setForeground(new Color(220, 20, 60));
+}
+lblLogo.setAlignmentX(Component.CENTER_ALIGNMENT);
+lblLogo.setBorder(BorderFactory.createEmptyBorder(0, 0, 30, 0));
+
+    // PANEL PRINCIPAL CON SOMBRA
+    JPanel panelContenido = new JPanel();
+    panelContenido.setBackground(new Color(25, 25, 28));
+    panelContenido.setLayout(new BoxLayout(panelContenido, BoxLayout.Y_AXIS));
+    panelContenido.setBorder(BorderFactory.createCompoundBorder(
+        BorderFactory.createLineBorder(new Color(40, 40, 45), 1),
+        BorderFactory.createEmptyBorder(35, 50, 35, 50)
+    ));
+
+    // TÍTULO Y SUBTÍTULO
+    JLabel lblTitulo = new JLabel("Crear cuenta");
+    lblTitulo.setForeground(Color.WHITE);
+    lblTitulo.setFont(new Font("Segoe UI", Font.BOLD, 26));
+    lblTitulo.setAlignmentX(Component.CENTER_ALIGNMENT);
+
+    JLabel lblSubtitulo = new JLabel("Únete a la mejor experiencia cinematográfica");
+    lblSubtitulo.setForeground(new Color(160, 160, 165));
+    lblSubtitulo.setFont(new Font("Segoe UI", Font.PLAIN, 12));
+    lblSubtitulo.setAlignmentX(Component.CENTER_ALIGNMENT);
+
+    panelContenido.add(lblTitulo);
+    panelContenido.add(Box.createVerticalStrut(5));
+    panelContenido.add(lblSubtitulo);
+    panelContenido.add(Box.createVerticalStrut(30));
+
+    // GRID DE 2 COLUMNAS PARA NOMBRE Y APELLIDO
+    JPanel panelNombreApellido = new JPanel(new GridLayout(1, 2, 15, 0));
+    panelNombreApellido.setBackground(new Color(25, 25, 28));
+    panelNombreApellido.setMaximumSize(new Dimension(450, 70));
+    panelNombreApellido.setAlignmentX(Component.CENTER_ALIGNMENT);
+
+    // NOMBRE
+    JPanel panelNombre = new JPanel();
+    panelNombre.setLayout(new BoxLayout(panelNombre, BoxLayout.Y_AXIS));
+    panelNombre.setBackground(new Color(25, 25, 28));
+
+    JLabel lblNombreLabel = new JLabel("Nombre");
+    lblNombreLabel.setForeground(new Color(200, 200, 205));
+    lblNombreLabel.setFont(new Font("Segoe UI", Font.BOLD, 11));
+    lblNombreLabel.setAlignmentX(Component.LEFT_ALIGNMENT);
+
+    JTextField txtNombre = new JTextField();
+    txtNombre.setMaximumSize(new Dimension(450, 42));
+    txtNombre.setBackground(new Color(18, 18, 20));
+    txtNombre.setForeground(Color.WHITE);
+    txtNombre.setCaretColor(new Color(220, 20, 60));
+    txtNombre.setFont(new Font("Segoe UI", Font.PLAIN, 14));
+    txtNombre.setBorder(BorderFactory.createCompoundBorder(
+        BorderFactory.createLineBorder(new Color(50, 50, 55), 1),
+        BorderFactory.createEmptyBorder(8, 14, 8, 14)));
+
+    txtNombre.addFocusListener(new FocusAdapter() {
+        @Override
+        public void focusGained(FocusEvent e) {
+            txtNombre.setBorder(BorderFactory.createCompoundBorder(
+                BorderFactory.createLineBorder(new Color(220, 20, 60), 2),
+                BorderFactory.createEmptyBorder(8, 14, 8, 14)));
+        }
+        @Override
+        public void focusLost(FocusEvent e) {
+            txtNombre.setBorder(BorderFactory.createCompoundBorder(
+                BorderFactory.createLineBorder(new Color(50, 50, 55), 1),
+                BorderFactory.createEmptyBorder(8, 14, 8, 14)));
+        }
+    });
+
+    panelNombre.add(lblNombreLabel);
+    panelNombre.add(Box.createVerticalStrut(6));
+    panelNombre.add(txtNombre);
+
+    // APELLIDO
+    JPanel panelApellido = new JPanel();
+    panelApellido.setLayout(new BoxLayout(panelApellido, BoxLayout.Y_AXIS));
+    panelApellido.setBackground(new Color(25, 25, 28));
+
+    JLabel lblApellidoLabel = new JLabel("Apellido");
+    lblApellidoLabel.setForeground(new Color(200, 200, 205));
+    lblApellidoLabel.setFont(new Font("Segoe UI", Font.BOLD, 11));
+    lblApellidoLabel.setAlignmentX(Component.LEFT_ALIGNMENT);
+
+    JTextField txtApellido = new JTextField();
+    txtApellido.setMaximumSize(new Dimension(450, 42));
+    txtApellido.setBackground(new Color(18, 18, 20));
+    txtApellido.setForeground(Color.WHITE);
+    txtApellido.setCaretColor(new Color(220, 20, 60));
+    txtApellido.setFont(new Font("Segoe UI", Font.PLAIN, 14));
+    txtApellido.setBorder(BorderFactory.createCompoundBorder(
+        BorderFactory.createLineBorder(new Color(50, 50, 55), 1),
+        BorderFactory.createEmptyBorder(8, 14, 8, 14)));
+
+    txtApellido.addFocusListener(new FocusAdapter() {
+        @Override
+        public void focusGained(FocusEvent e) {
+            txtApellido.setBorder(BorderFactory.createCompoundBorder(
+                BorderFactory.createLineBorder(new Color(220, 20, 60), 2),
+                BorderFactory.createEmptyBorder(8, 14, 8, 14)));
+        }
+        @Override
+        public void focusLost(FocusEvent e) {
+            txtApellido.setBorder(BorderFactory.createCompoundBorder(
+                BorderFactory.createLineBorder(new Color(50, 50, 55), 1),
+                BorderFactory.createEmptyBorder(8, 14, 8, 14)));
+        }
+    });
+
+    panelApellido.add(lblApellidoLabel);
+    panelApellido.add(Box.createVerticalStrut(6));
+    panelApellido.add(txtApellido);
+
+    panelNombreApellido.add(panelNombre);
+    panelNombreApellido.add(panelApellido);
+
+    panelContenido.add(panelNombreApellido);
+    panelContenido.add(Box.createVerticalStrut(18));
+
+    // CORREO ELECTRÓNICO (ANCHO COMPLETO)
+    JLabel lblCorreoLabel = new JLabel("Correo electrónico");
+    lblCorreoLabel.setForeground(new Color(200, 200, 205));
+    lblCorreoLabel.setFont(new Font("Segoe UI", Font.BOLD, 11));
+    lblCorreoLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
+
+    JTextField txtCorreo = new JTextField();
+    txtCorreo.setMaximumSize(new Dimension(450, 42));
+    txtCorreo.setBackground(new Color(18, 18, 20));
+    txtCorreo.setForeground(Color.WHITE);
+    txtCorreo.setCaretColor(new Color(220, 20, 60));
+    txtCorreo.setFont(new Font("Segoe UI", Font.PLAIN, 14));
+    txtCorreo.setBorder(BorderFactory.createCompoundBorder(
+        BorderFactory.createLineBorder(new Color(50, 50, 55), 1),
+        BorderFactory.createEmptyBorder(8, 14, 8, 14)));
+    txtCorreo.setAlignmentX(Component.CENTER_ALIGNMENT);
+
+    txtCorreo.addFocusListener(new FocusAdapter() {
+        @Override
+        public void focusGained(FocusEvent e) {
+            txtCorreo.setBorder(BorderFactory.createCompoundBorder(
+                BorderFactory.createLineBorder(new Color(220, 20, 60), 2),
+                BorderFactory.createEmptyBorder(8, 14, 8, 14)));
+        }
+        @Override
+        public void focusLost(FocusEvent e) {
+            txtCorreo.setBorder(BorderFactory.createCompoundBorder(
+                BorderFactory.createLineBorder(new Color(50, 50, 55), 1),
+                BorderFactory.createEmptyBorder(8, 14, 8, 14)));
+        }
+    });
+
+    panelContenido.add(lblCorreoLabel);
+    panelContenido.add(Box.createVerticalStrut(6));
+    panelContenido.add(txtCorreo);
+    panelContenido.add(Box.createVerticalStrut(18));
+
+    // DNI Y FECHA EN 2 COLUMNAS
+    JPanel panelDNIFecha = new JPanel(new GridLayout(1, 2, 15, 0));
+    panelDNIFecha.setBackground(new Color(25, 25, 28));
+    panelDNIFecha.setMaximumSize(new Dimension(450, 70));
+    panelDNIFecha.setAlignmentX(Component.CENTER_ALIGNMENT);
+
+    // DNI
+    JPanel panelDNI = new JPanel();
+    panelDNI.setLayout(new BoxLayout(panelDNI, BoxLayout.Y_AXIS));
+    panelDNI.setBackground(new Color(25, 25, 28));
+
+    JLabel lblDNILabel = new JLabel("DNI");
+    lblDNILabel.setForeground(new Color(200, 200, 205));
+    lblDNILabel.setFont(new Font("Segoe UI", Font.BOLD, 11));
+    lblDNILabel.setAlignmentX(Component.LEFT_ALIGNMENT);
+
+    JTextField txtDNI = new JTextField();
+    txtDNI.setMaximumSize(new Dimension(450, 42));
+    txtDNI.setBackground(new Color(18, 18, 20));
+    txtDNI.setForeground(Color.WHITE);
+    txtDNI.setCaretColor(new Color(220, 20, 60));
+    txtDNI.setFont(new Font("Segoe UI", Font.PLAIN, 14));
+    txtDNI.setBorder(BorderFactory.createCompoundBorder(
+        BorderFactory.createLineBorder(new Color(50, 50, 55), 1),
+        BorderFactory.createEmptyBorder(8, 14, 8, 14)));
+
+    txtDNI.addFocusListener(new FocusAdapter() {
+        @Override
+        public void focusGained(FocusEvent e) {
+            txtDNI.setBorder(BorderFactory.createCompoundBorder(
+                BorderFactory.createLineBorder(new Color(220, 20, 60), 2),
+                BorderFactory.createEmptyBorder(8, 14, 8, 14)));
+        }
+        @Override
+        public void focusLost(FocusEvent e) {
+            txtDNI.setBorder(BorderFactory.createCompoundBorder(
+                BorderFactory.createLineBorder(new Color(50, 50, 55), 1),
+                BorderFactory.createEmptyBorder(8, 14, 8, 14)));
+        }
+    });
+
+    panelDNI.add(lblDNILabel);
+    panelDNI.add(Box.createVerticalStrut(6));
+    panelDNI.add(txtDNI);
+
+    // FECHA DE NACIMIENTO - CORREGIDO CON 3 CAMPOS
+    JPanel panelFechaCompleto = new JPanel();
+    panelFechaCompleto.setLayout(new BoxLayout(panelFechaCompleto, BoxLayout.Y_AXIS));
+    panelFechaCompleto.setBackground(new Color(25, 25, 28));
+
+    JLabel lblFechaLabel = new JLabel("Fecha de Nacimiento");
+    lblFechaLabel.setForeground(new Color(200, 200, 205));
+    lblFechaLabel.setFont(new Font("Segoe UI", Font.BOLD, 11));
+    lblFechaLabel.setAlignmentX(Component.LEFT_ALIGNMENT);
+
+    JPanel panelFechaContainer = new JPanel(new FlowLayout(FlowLayout.LEFT, 5, 0));
+    panelFechaContainer.setBackground(new Color(25, 25, 28));
+    panelFechaContainer.setMaximumSize(new Dimension(450, 42));
+
+    JTextField txtDia = new JTextField();
+    txtDia.setPreferredSize(new Dimension(50, 42));
+    txtDia.setBackground(new Color(18, 18, 20));
+    txtDia.setForeground(Color.WHITE);
+    txtDia.setCaretColor(new Color(220, 20, 60));
+    txtDia.setFont(new Font("Segoe UI", Font.PLAIN, 14));
+    txtDia.setBorder(BorderFactory.createCompoundBorder(
+        BorderFactory.createLineBorder(new Color(50, 50, 55), 1),
+        BorderFactory.createEmptyBorder(8, 8, 8, 8)));
+    txtDia.setHorizontalAlignment(JTextField.CENTER);
+
+    JLabel lblBarra1 = new JLabel("/");
+    lblBarra1.setForeground(new Color(100, 100, 105));
+    lblBarra1.setFont(new Font("Segoe UI", Font.PLAIN, 18));
+
+    JTextField txtMes = new JTextField();
+    txtMes.setPreferredSize(new Dimension(50, 42));
+    txtMes.setBackground(new Color(18, 18, 20));
+    txtMes.setForeground(Color.WHITE);
+    txtMes.setCaretColor(new Color(220, 20, 60));
+    txtMes.setFont(new Font("Segoe UI", Font.PLAIN, 14));
+    txtMes.setBorder(BorderFactory.createCompoundBorder(
+        BorderFactory.createLineBorder(new Color(50, 50, 55), 1),
+        BorderFactory.createEmptyBorder(8, 8, 8, 8)));
+    txtMes.setHorizontalAlignment(JTextField.CENTER);
+
+    JLabel lblBarra2 = new JLabel("/");
+    lblBarra2.setForeground(new Color(100, 100, 105));
+    lblBarra2.setFont(new Font("Segoe UI", Font.PLAIN, 18));
+
+    JTextField txtAnio = new JTextField();
+    txtAnio.setPreferredSize(new Dimension(70, 42));
+    txtAnio.setBackground(new Color(18, 18, 20));
+    txtAnio.setForeground(Color.WHITE);
+    txtAnio.setCaretColor(new Color(220, 20, 60));
+    txtAnio.setFont(new Font("Segoe UI", Font.PLAIN, 14));
+    txtAnio.setBorder(BorderFactory.createCompoundBorder(
+        BorderFactory.createLineBorder(new Color(50, 50, 55), 1),
+        BorderFactory.createEmptyBorder(8, 8, 8, 8)));
+    txtAnio.setHorizontalAlignment(JTextField.CENTER);
+
+    panelFechaContainer.add(txtDia);
+    panelFechaContainer.add(lblBarra1);
+    panelFechaContainer.add(txtMes);
+    panelFechaContainer.add(lblBarra2);
+    panelFechaContainer.add(txtAnio);
+
+    panelFechaCompleto.add(lblFechaLabel);
+    panelFechaCompleto.add(Box.createVerticalStrut(6));
+    panelFechaCompleto.add(panelFechaContainer);
+
+    panelDNIFecha.add(panelDNI);
+    panelDNIFecha.add(panelFechaCompleto);
+
+    panelContenido.add(panelDNIFecha);
+    panelContenido.add(Box.createVerticalStrut(18));
+
+    // CONTRASEÑAS EN 2 COLUMNAS
+    JPanel panelPasswords = new JPanel(new GridLayout(1, 2, 15, 0));
+    panelPasswords.setBackground(new Color(25, 25, 28));
+    panelPasswords.setMaximumSize(new Dimension(450, 70));
+    panelPasswords.setAlignmentX(Component.CENTER_ALIGNMENT);
+
+    // CONTRASEÑA
+    JPanel panelPass = new JPanel();
+    panelPass.setLayout(new BoxLayout(panelPass, BoxLayout.Y_AXIS));
+    panelPass.setBackground(new Color(25, 25, 28));
+
+    JLabel lblPassLabel = new JLabel("Contraseña");
+    lblPassLabel.setForeground(new Color(200, 200, 205));
+    lblPassLabel.setFont(new Font("Segoe UI", Font.BOLD, 11));
+    lblPassLabel.setAlignmentX(Component.LEFT_ALIGNMENT);
+
+    JPasswordField txtPass = new JPasswordField();
+    txtPass.setMaximumSize(new Dimension(450, 42));
+    txtPass.setBackground(new Color(18, 18, 20));
+    txtPass.setForeground(Color.WHITE);
+    txtPass.setCaretColor(new Color(220, 20, 60));
+    txtPass.setFont(new Font("Segoe UI", Font.PLAIN, 14));
+    txtPass.setBorder(BorderFactory.createCompoundBorder(
+        BorderFactory.createLineBorder(new Color(50, 50, 55), 1),
+        BorderFactory.createEmptyBorder(8, 14, 8, 14)));
+
+    txtPass.addFocusListener(new FocusAdapter() {
+        @Override
+        public void focusGained(FocusEvent e) {
+            txtPass.setBorder(BorderFactory.createCompoundBorder(
+                BorderFactory.createLineBorder(new Color(220, 20, 60), 2),
+                BorderFactory.createEmptyBorder(8, 14, 8, 14)));
+        }
+        @Override
+        public void focusLost(FocusEvent e) {
+            txtPass.setBorder(BorderFactory.createCompoundBorder(
+                BorderFactory.createLineBorder(new Color(50, 50, 55), 1),
+                BorderFactory.createEmptyBorder(8, 14, 8, 14)));
+        }
+    });
+
+    panelPass.add(lblPassLabel);
+    panelPass.add(Box.createVerticalStrut(6));
+    panelPass.add(txtPass);
+
+    // CONFIRMAR CONTRASEÑA
+    JPanel panelConfirmar = new JPanel();
+    panelConfirmar.setLayout(new BoxLayout(panelConfirmar, BoxLayout.Y_AXIS));
+    panelConfirmar.setBackground(new Color(25, 25, 28));
+
+    JLabel lblConfirmarLabel = new JLabel("Confirmar Contraseña");
+    lblConfirmarLabel.setForeground(new Color(200, 200, 205));
+    lblConfirmarLabel.setFont(new Font("Segoe UI", Font.BOLD, 11));
+    lblConfirmarLabel.setAlignmentX(Component.LEFT_ALIGNMENT);
+
+    JPasswordField txtConfirmar = new JPasswordField();
+    txtConfirmar.setMaximumSize(new Dimension(450, 42));
+    txtConfirmar.setBackground(new Color(18, 18, 20));
+    txtConfirmar.setForeground(Color.WHITE);
+    txtConfirmar.setCaretColor(new Color(220, 20, 60));
+    txtConfirmar.setFont(new Font("Segoe UI", Font.PLAIN, 14));
+    txtConfirmar.setBorder(BorderFactory.createCompoundBorder(
+        BorderFactory.createLineBorder(new Color(50, 50, 55), 1),
+        BorderFactory.createEmptyBorder(8, 14, 8, 14)));
+
+    txtConfirmar.addFocusListener(new FocusAdapter() {
+        @Override
+        public void focusGained(FocusEvent e) {
+            txtConfirmar.setBorder(BorderFactory.createCompoundBorder(
+                BorderFactory.createLineBorder(new Color(220, 20, 60), 2),
+                BorderFactory.createEmptyBorder(8, 14, 8, 14)));
+        }
+        @Override
+        public void focusLost(FocusEvent e) {
+            txtConfirmar.setBorder(BorderFactory.createCompoundBorder(
+                BorderFactory.createLineBorder(new Color(50, 50, 55), 1),
+                BorderFactory.createEmptyBorder(8, 14, 8, 14)));
+        }
+    });
+
+    panelConfirmar.add(lblConfirmarLabel);
+    panelConfirmar.add(Box.createVerticalStrut(6));
+    panelConfirmar.add(txtConfirmar);
+
+    panelPasswords.add(panelPass);
+    panelPasswords.add(panelConfirmar);
+
+    panelContenido.add(panelPasswords);
+    panelContenido.add(Box.createVerticalStrut(28));
+
+    // BOTÓN CREAR CUENTA - PREMIUM
+    JButton btnCrear = new JButton("Crear cuenta");
+    btnCrear.setMaximumSize(new Dimension(450, 48));
+    btnCrear.setAlignmentX(Component.CENTER_ALIGNMENT);
+    btnCrear.setBackground(new Color(220, 20, 60));
+    btnCrear.setForeground(Color.WHITE);
+    btnCrear.setFont(new Font("Segoe UI", Font.BOLD, 14));
+    btnCrear.setFocusPainted(false);
+    btnCrear.setBorderPainted(false);
+    btnCrear.setCursor(new Cursor(Cursor.HAND_CURSOR));
+
+    btnCrear.addMouseListener(new MouseAdapter() {
+        @Override
+        public void mouseEntered(MouseEvent e) {
+            btnCrear.setBackground(new Color(200, 15, 50));
+        }
+        @Override
+        public void mouseExited(MouseEvent e) {
+            btnCrear.setBackground(new Color(220, 20, 60));
+        }
+    });
+
+    panelContenido.add(btnCrear);
+    panelContenido.add(Box.createVerticalStrut(15));
+
+    // TEXTO "¿YA TIENES CUENTA?"
+    JPanel panelYaTienesCuenta = new JPanel(new FlowLayout(FlowLayout.CENTER, 5, 0));
+    panelYaTienesCuenta.setBackground(new Color(25, 25, 28));
+    panelYaTienesCuenta.setMaximumSize(new Dimension(450, 30));
+    panelYaTienesCuenta.setAlignmentX(Component.CENTER_ALIGNMENT);
+
+    JLabel lblYaTienesCuenta = new JLabel("¿Ya tienes cuenta?");
+    lblYaTienesCuenta.setForeground(new Color(160, 160, 165));
+    lblYaTienesCuenta.setFont(new Font("Segoe UI", Font.PLAIN, 12));
+
+    JButton btnVolverReg = new JButton("Inicia sesión");
+    btnVolverReg.setForeground(new Color(220, 20, 60));
+    btnVolverReg.setFont(new Font("Segoe UI", Font.BOLD, 12));
+    btnVolverReg.setFocusPainted(false);
+    btnVolverReg.setBorderPainted(false);
+    btnVolverReg.setContentAreaFilled(false);
+    btnVolverReg.setCursor(new Cursor(Cursor.HAND_CURSOR));
+
+    btnVolverReg.addMouseListener(new MouseAdapter() {
+        @Override
+        public void mouseEntered(MouseEvent e) {
+            btnVolverReg.setForeground(new Color(200, 15, 50));
+        }
+        @Override
+        public void mouseExited(MouseEvent e) {
+            btnVolverReg.setForeground(new Color(220, 20, 60));
+        }
+    });
+
+    panelYaTienesCuenta.add(lblYaTienesCuenta);
+    panelYaTienesCuenta.add(btnVolverReg);
+
+    panelContenido.add(panelYaTienesCuenta);
+
+    JScrollPane scrollPane = new JScrollPane(panelContenido);
+    scrollPane.setPreferredSize(new Dimension(560, 600));
+    scrollPane.setMaximumSize(new Dimension(560, 600));
+    scrollPane.setBorder(null);
+    scrollPane.setBackground(new Color(15, 15, 15));
+    scrollPane.getViewport().setBackground(new Color(15, 15, 15));
+    scrollPane.setHorizontalScrollBarPolicy(JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
+    scrollPane.getVerticalScrollBar().setUnitIncrement(16);
+
+    panelPrincipal.add(lblLogo);
+    panelPrincipal.add(Box.createVerticalStrut(5));
+    panelPrincipal.add(scrollPane);
+
+    // EVENTOS
+    btnVolverReg.addActionListener(e -> {
+        CardLayout cl = (CardLayout) panelContenedor.getLayout();
+        cl.show(panelContenedor, "LOGIN");
+    });
+
+    btnCrear.addActionListener(e -> {
+        String nombre = txtNombre.getText().trim();
+        String apellido = txtApellido.getText().trim();
+        String dniStr = txtDNI.getText().trim();
+        String dia = txtDia.getText().trim();
+        String mes = txtMes.getText().trim();
+        String anio = txtAnio.getText().trim();
+        String correo = txtCorreo.getText().trim();
+        String pass = new String(txtPass.getPassword()).trim();
+        String confirmar = new String(txtConfirmar.getPassword()).trim();
+
+        if (nombre.isEmpty() || apellido.isEmpty() || dniStr.isEmpty() || 
+            dia.isEmpty() || mes.isEmpty() || anio.isEmpty() || 
+            correo.isEmpty() || pass.isEmpty() || confirmar.isEmpty()) {
+            JOptionPane.showMessageDialog(dialog, "Por favor, completa todos los campos", "Campos incompletos", JOptionPane.WARNING_MESSAGE);
+            return;
+        }
+        if (!validarSoloLetras(nombre)) {
+            JOptionPane.showMessageDialog(dialog, 
+                "El nombre solo puede contener letras", 
+                "Nombre inválido", 
+                JOptionPane.ERROR_MESSAGE);
+            return;
+}
+        if (!validarSoloLetras(apellido)) {
+            JOptionPane.showMessageDialog(dialog, 
+            "El apellido solo puede contener letras", 
+            "Apellido inválido", 
+            JOptionPane.ERROR_MESSAGE);
+        return;
+}
+
+        int DNI;
+        try {
+            DNI = Integer.parseInt(dniStr);
+            if (DNI <= 0 || dniStr.length() != 8) {
+                JOptionPane.showMessageDialog(dialog, "El DNI debe tener exactamente 8 dígitos", "DNI inválido", JOptionPane.ERROR_MESSAGE);
+                return;
+            }
+        } catch (NumberFormatException ex) {
+            JOptionPane.showMessageDialog(dialog, "El DNI debe contener solo números", "DNI inválido", JOptionPane.ERROR_MESSAGE);
+            return;
+        }
+
+        int diaInt, mesInt, anioInt;
+        try {
+            diaInt = Integer.parseInt(dia);
+            mesInt = Integer.parseInt(mes);
+            anioInt = Integer.parseInt(anio);
+
+            if (diaInt < 1 || diaInt > 31) {
+                JOptionPane.showMessageDialog(dialog, "Fecha inválida", "Fecha inválida", JOptionPane.ERROR_MESSAGE);
+                return;
+            }
+            if (mesInt < 1 || mesInt > 12) {
+                JOptionPane.showMessageDialog(dialog, "Fecha inválida", "Fecha inválida", JOptionPane.ERROR_MESSAGE);
+                return;
+            }
+            if (anioInt < 1920 || anioInt > 2024) {
+                JOptionPane.showMessageDialog(dialog, "Fecha inválida", "Fecha inválida", JOptionPane.ERROR_MESSAGE);
                 return;
             }
 
-            if (sistemaLogin.iniciarSesion(correo, pass)) {
-                usuarioActual = sistemaLogin.getUsuarioActual();
-                dialog.dispose();
-                crearInterfazPrincipal();
-                setVisible(true);
-                mostrarPerfil();
-            } else {
-                JOptionPane.showMessageDialog(dialog, "Correo o contraseña incorrectos.");
+            if (mesInt == 2) {
+                boolean esBisiesto = (anioInt % 4 == 0 && anioInt % 100 != 0) || (anioInt % 400 == 0);
+                if (diaInt > (esBisiesto ? 29 : 28)) {
+                    JOptionPane.showMessageDialog(dialog, "Febrero no puede tener más de " + (esBisiesto ? "29" : "28") + " días", "Fecha inválida", JOptionPane.ERROR_MESSAGE);
+                    return;
+                }
+            } else if (mesInt == 4 || mesInt == 6 || mesInt == 9 || mesInt == 11) {
+                if (diaInt > 30) {
+                    JOptionPane.showMessageDialog(dialog, "Este mes no puede tener más de 30 días", "Fecha inválida", JOptionPane.ERROR_MESSAGE);
+                    return;
+                }
             }
-        });
+        } catch (NumberFormatException ex) {
+            JOptionPane.showMessageDialog(dialog, "La fecha debe contener solo números", "Fecha inválida", JOptionPane.ERROR_MESSAGE);
+            return;
+        }
 
-        return panelPrincipal;
-    }
+        java.sql.Date fechaNacimiento;
+        try {
+            String fechaStr = String.format("%04d-%02d-%02d", anioInt, mesInt, diaInt);
+            fechaNacimiento = java.sql.Date.valueOf(fechaStr);
+        } catch (IllegalArgumentException ex) {
+            JOptionPane.showMessageDialog(dialog, "La fecha ingresada no es válida", "Fecha inválida", JOptionPane.ERROR_MESSAGE);
+            return;
+        }
 
-    private JPanel crearPanelRegistro(JDialog dialog, JPanel panelContenedor) {
-        JPanel panelPrincipal = new JPanel();
-        panelPrincipal.setLayout(new BoxLayout(panelPrincipal, BoxLayout.Y_AXIS));
-        panelPrincipal.setBackground(new Color(50, 50, 50));
-        panelPrincipal.setBorder(BorderFactory.createEmptyBorder(20, 0, 20, 0));
+        if (!pass.equals(confirmar)) {
+            JOptionPane.showMessageDialog(dialog, "Las contraseñas no coinciden", "Error de contraseña", JOptionPane.ERROR_MESSAGE);
+            return;
+        }
 
-        JLabel lblLogo = new JLabel("CINEMARX", SwingConstants.CENTER);
-        lblLogo.setFont(new Font("Segoe UI", Font.BOLD, 32));
-        lblLogo.setForeground(Color.WHITE);
-        lblLogo.setAlignmentX(Component.CENTER_ALIGNMENT);
+        if (pass.length() < 6) {
+            JOptionPane.showMessageDialog(dialog, "La contraseña debe tener al menos 6 caracteres", "Contraseña débil", JOptionPane.ERROR_MESSAGE);
+            return;
+        }
 
-        JPanel panelContenido = new JPanel();
-        panelContenido.setBackground(new Color(20, 20, 20));
-        panelContenido.setLayout(new BoxLayout(panelContenido, BoxLayout.Y_AXIS));
-        panelContenido.setBorder(BorderFactory.createEmptyBorder(30, 50, 30, 50));
+        if (!correo.toLowerCase().endsWith("@gmail.com")) {
+            JOptionPane.showMessageDialog(dialog, "El correo debe terminar en @gmail.com", "Correo inválido", JOptionPane.ERROR_MESSAGE);
+            return;
+        }
 
-        JLabel lblTitulo = new JLabel("Regístrate:", SwingConstants.CENTER);
-        lblTitulo.setForeground(Color.WHITE);
-        lblTitulo.setFont(new Font("Segoe UI", Font.BOLD, 24));
-        lblTitulo.setAlignmentX(Component.CENTER_ALIGNMENT);
+        btnCrear.setEnabled(false);
+        btnCrear.setText("Creando cuenta...");
+        btnCrear.setBackground(new Color(150, 150, 150));
 
-        JLabel lblSubtitulo = new JLabel("Completa todos los campos para crear tu cuenta");
-        lblSubtitulo.setForeground(new Color(180, 180, 180));
-        lblSubtitulo.setFont(new Font("Segoe UI", Font.PLAIN, 12));
-        lblSubtitulo.setAlignmentX(Component.CENTER_ALIGNMENT);
+        if (sistemaLogin.registrarUsuario(nombre, apellido, correo, pass, DNI, fechaNacimiento)) {
+            JOptionPane.showMessageDialog(dialog, 
+                "¡Cuenta creada exitosamente!\n\nYa puedes iniciar sesión con tu correo y contraseña.", 
+                "Registro exitoso", 
+                JOptionPane.INFORMATION_MESSAGE);
 
-        panelContenido.add(lblTitulo);
-        panelContenido.add(Box.createVerticalStrut(5));
-        panelContenido.add(lblSubtitulo);
-        panelContenido.add(Box.createVerticalStrut(25));
+            txtNombre.setText("");
+            txtApellido.setText("");
+            txtDNI.setText("");
+            txtDia.setText("");
+            txtMes.setText("");
+            txtAnio.setText("");
+            txtCorreo.setText("");
+            txtPass.setText("");
+            txtConfirmar.setText("");
 
-        // NOMBRE
-        JLabel lblNombreLabel = new JLabel("Nombre *");
-        lblNombreLabel.setForeground(new Color(180, 180, 180));
-        lblNombreLabel.setFont(new Font("Segoe UI", Font.PLAIN, 12));
-        lblNombreLabel.setAlignmentX(Component.LEFT_ALIGNMENT);
-
-        JTextField txtNombre = new JTextField();
-        txtNombre.setMaximumSize(new Dimension(400, 45));
-        txtNombre.setBackground(new Color(35, 35, 35));
-        txtNombre.setForeground(Color.WHITE);
-        txtNombre.setCaretColor(Color.WHITE);
-        txtNombre.setFont(new Font("Segoe UI", Font.PLAIN, 14));
-        txtNombre.setBorder(BorderFactory.createCompoundBorder(
-            BorderFactory.createLineBorder(new Color(60, 60, 60)),
-            BorderFactory.createEmptyBorder(5, 10, 5, 10)));
-        txtNombre.setAlignmentX(Component.LEFT_ALIGNMENT);
-
-        panelContenido.add(lblNombreLabel);
-        panelContenido.add(Box.createVerticalStrut(5));
-        panelContenido.add(txtNombre);
-        panelContenido.add(Box.createVerticalStrut(15));
-
-        // APELLIDO
-        JLabel lblApellidoLabel = new JLabel("Apellido *");
-        lblApellidoLabel.setForeground(new Color(180, 180, 180));
-        lblApellidoLabel.setFont(new Font("Segoe UI", Font.PLAIN, 12));
-        lblApellidoLabel.setAlignmentX(Component.LEFT_ALIGNMENT);
-
-        JTextField txtApellido = new JTextField();
-        txtApellido.setMaximumSize(new Dimension(400, 45));
-        txtApellido.setBackground(new Color(35, 35, 35));
-        txtApellido.setForeground(Color.WHITE);
-        txtApellido.setCaretColor(Color.WHITE);
-        txtApellido.setFont(new Font("Segoe UI", Font.PLAIN, 14));
-        txtApellido.setBorder(BorderFactory.createCompoundBorder(
-            BorderFactory.createLineBorder(new Color(60, 60, 60)),
-            BorderFactory.createEmptyBorder(5, 10, 5, 10)));
-        txtApellido.setAlignmentX(Component.LEFT_ALIGNMENT);
-
-        panelContenido.add(lblApellidoLabel);
-        panelContenido.add(Box.createVerticalStrut(5));
-        panelContenido.add(txtApellido);
-        panelContenido.add(Box.createVerticalStrut(15));
-
-        // DNI
-        JLabel lblDNILabel = new JLabel("DNI (solo números) *");
-        lblDNILabel.setForeground(new Color(180, 180, 180));
-        lblDNILabel.setFont(new Font("Segoe UI", Font.PLAIN, 12));
-        lblDNILabel.setAlignmentX(Component.LEFT_ALIGNMENT);
-
-        JTextField txtDNI = new JTextField();
-        txtDNI.setMaximumSize(new Dimension(400, 45));
-        txtDNI.setBackground(new Color(35, 35, 35));
-        txtDNI.setForeground(Color.WHITE);
-        txtDNI.setCaretColor(Color.WHITE);
-        txtDNI.setFont(new Font("Segoe UI", Font.PLAIN, 14));
-        txtDNI.setBorder(BorderFactory.createCompoundBorder(
-            BorderFactory.createLineBorder(new Color(60, 60, 60)),
-            BorderFactory.createEmptyBorder(5, 10, 5, 10)));
-        txtDNI.setAlignmentX(Component.LEFT_ALIGNMENT);
-
-        panelContenido.add(lblDNILabel);
-        panelContenido.add(Box.createVerticalStrut(5));
-        panelContenido.add(txtDNI);
-        panelContenido.add(Box.createVerticalStrut(15));
-
-        // FECHA DE NACIMIENTO
-        JLabel lblFechaLabel = new JLabel("Fecha de Nacimiento (DD/MM/AAAA) *");
-        lblFechaLabel.setForeground(new Color(180, 180, 180));
-        lblFechaLabel.setFont(new Font("Segoe UI", Font.PLAIN, 12));
-        lblFechaLabel.setAlignmentX(Component.LEFT_ALIGNMENT);
-
-        JPanel panelFechaContainer = new JPanel();
-        panelFechaContainer.setLayout(new BoxLayout(panelFechaContainer, BoxLayout.X_AXIS));
-        panelFechaContainer.setBackground(new Color(20, 20, 20));
-        panelFechaContainer.setMaximumSize(new Dimension(400, 45));
-        panelFechaContainer.setAlignmentX(Component.LEFT_ALIGNMENT);
-
-        JTextField txtDia = new JTextField();
-        txtDia.setPreferredSize(new Dimension(70, 45));
-        txtDia.setMaximumSize(new Dimension(70, 45));
-        txtDia.setBackground(new Color(35, 35, 35));
-        txtDia.setForeground(Color.WHITE);
-        txtDia.setCaretColor(Color.WHITE);
-        txtDia.setFont(new Font("Segoe UI", Font.PLAIN, 14));
-        txtDia.setBorder(BorderFactory.createCompoundBorder(
-            BorderFactory.createLineBorder(new Color(60, 60, 60)),
-            BorderFactory.createEmptyBorder(5, 10, 5, 10)));
-        txtDia.setHorizontalAlignment(JTextField.CENTER);
-
-        JLabel lblBarra1 = new JLabel(" / ");
-        lblBarra1.setForeground(Color.WHITE);
-        lblBarra1.setFont(new Font("Segoe UI", Font.BOLD, 18));
-
-        JTextField txtMes = new JTextField();
-        txtMes.setPreferredSize(new Dimension(70, 45));
-        txtMes.setMaximumSize(new Dimension(70, 45));
-        txtMes.setBackground(new Color(35, 35, 35));
-        txtMes.setForeground(Color.WHITE);
-        txtMes.setCaretColor(Color.WHITE);
-        txtMes.setFont(new Font("Segoe UI", Font.PLAIN, 14));
-        txtMes.setBorder(BorderFactory.createCompoundBorder(
-            BorderFactory.createLineBorder(new Color(60, 60, 60)),
-            BorderFactory.createEmptyBorder(5, 10, 5, 10)));
-        txtMes.setHorizontalAlignment(JTextField.CENTER);
-
-        JLabel lblBarra2 = new JLabel(" / ");
-        lblBarra2.setForeground(Color.WHITE);
-        lblBarra2.setFont(new Font("Segoe UI", Font.BOLD, 18));
-
-        JTextField txtAnio = new JTextField();
-        txtAnio.setPreferredSize(new Dimension(100, 45));
-        txtAnio.setMaximumSize(new Dimension(100, 45));
-        txtAnio.setBackground(new Color(35, 35, 35));
-        txtAnio.setForeground(Color.WHITE);
-        txtAnio.setCaretColor(Color.WHITE);
-        txtAnio.setFont(new Font("Segoe UI", Font.PLAIN, 14));
-        txtAnio.setBorder(BorderFactory.createCompoundBorder(
-            BorderFactory.createLineBorder(new Color(60, 60, 60)),
-            BorderFactory.createEmptyBorder(5, 10, 5, 10)));
-        txtAnio.setHorizontalAlignment(JTextField.CENTER);
-
-        panelFechaContainer.add(txtDia);
-        panelFechaContainer.add(lblBarra1);
-        panelFechaContainer.add(txtMes);
-        panelFechaContainer.add(lblBarra2);
-        panelFechaContainer.add(txtAnio);
-        panelFechaContainer.add(Box.createHorizontalGlue());
-
-        panelContenido.add(lblFechaLabel);
-        panelContenido.add(Box.createVerticalStrut(5));
-        panelContenido.add(panelFechaContainer);
-        panelContenido.add(Box.createVerticalStrut(15));
-
-        // CORREO
-        JLabel lblCorreoLabel = new JLabel("Correo electrónico (@gmail.com) *");
-        lblCorreoLabel.setForeground(new Color(180, 180, 180));
-        lblCorreoLabel.setFont(new Font("Segoe UI", Font.PLAIN, 12));
-        lblCorreoLabel.setAlignmentX(Component.LEFT_ALIGNMENT);
-
-        JTextField txtCorreo = new JTextField();
-        txtCorreo.setMaximumSize(new Dimension(400, 45));
-        txtCorreo.setBackground(new Color(35, 35, 35));
-        txtCorreo.setForeground(Color.WHITE);
-        txtCorreo.setCaretColor(Color.WHITE);
-        txtCorreo.setFont(new Font("Segoe UI", Font.PLAIN, 14));
-        txtCorreo.setBorder(BorderFactory.createCompoundBorder(
-            BorderFactory.createLineBorder(new Color(60, 60, 60)),
-            BorderFactory.createEmptyBorder(5, 10, 5, 10)));
-        txtCorreo.setAlignmentX(Component.LEFT_ALIGNMENT);
-
-        panelContenido.add(lblCorreoLabel);
-        panelContenido.add(Box.createVerticalStrut(5));
-        panelContenido.add(txtCorreo);
-        panelContenido.add(Box.createVerticalStrut(15));
-
-        // CONTRASEÑA
-        JLabel lblPassLabel = new JLabel("Contraseña *");
-        lblPassLabel.setForeground(new Color(180, 180, 180));
-        lblPassLabel.setFont(new Font("Segoe UI", Font.PLAIN, 12));
-        lblPassLabel.setAlignmentX(Component.LEFT_ALIGNMENT);
-
-        JPasswordField txtPass = new JPasswordField();
-        txtPass.setMaximumSize(new Dimension(400, 45));
-        txtPass.setBackground(new Color(35, 35, 35));
-        txtPass.setForeground(Color.WHITE);
-        txtPass.setCaretColor(Color.WHITE);
-        txtPass.setFont(new Font("Segoe UI", Font.PLAIN, 14));
-        txtPass.setBorder(BorderFactory.createCompoundBorder(
-            BorderFactory.createLineBorder(new Color(60, 60, 60)),
-            BorderFactory.createEmptyBorder(5, 10, 5, 10)));
-        txtPass.setAlignmentX(Component.LEFT_ALIGNMENT);
-
-        panelContenido.add(lblPassLabel);
-        panelContenido.add(Box.createVerticalStrut(5));
-        panelContenido.add(txtPass);
-        panelContenido.add(Box.createVerticalStrut(15));
-
-        // CONFIRMAR CONTRASEÑA
-        JLabel lblConfirmarLabel = new JLabel("Confirmar Contraseña *");
-        lblConfirmarLabel.setForeground(new Color(180, 180, 180));
-        lblConfirmarLabel.setFont(new Font("Segoe UI", Font.PLAIN, 12));
-        lblConfirmarLabel.setAlignmentX(Component.LEFT_ALIGNMENT);
-
-        JPasswordField txtConfirmar = new JPasswordField();
-        txtConfirmar.setMaximumSize(new Dimension(400, 45));
-        txtConfirmar.setBackground(new Color(35, 35, 35));
-        txtConfirmar.setForeground(Color.WHITE);
-        txtConfirmar.setCaretColor(Color.WHITE);
-        txtConfirmar.setFont(new Font("Segoe UI", Font.PLAIN, 14));
-        txtConfirmar.setBorder(BorderFactory.createCompoundBorder(
-            BorderFactory.createLineBorder(new Color(60, 60, 60)),
-            BorderFactory.createEmptyBorder(5, 10, 5, 10)));
-        txtConfirmar.setAlignmentX(Component.LEFT_ALIGNMENT);
-
-        panelContenido.add(lblConfirmarLabel);
-        panelContenido.add(Box.createVerticalStrut(5));
-        panelContenido.add(txtConfirmar);
-        panelContenido.add(Box.createVerticalStrut(25));
-
-        // BOTONES
-        JButton btnCrear = new JButton("Crear cuenta");
-        btnCrear.setMaximumSize(new Dimension(400, 50));
-        btnCrear.setAlignmentX(Component.LEFT_ALIGNMENT);
-        btnCrear.setBackground(new Color(220, 20, 60));
-        btnCrear.setForeground(Color.WHITE);
-        btnCrear.setFont(new Font("Segoe UI", Font.BOLD, 14));
-        btnCrear.setFocusPainted(false);
-        btnCrear.setBorderPainted(false);
-        btnCrear.setCursor(new Cursor(Cursor.HAND_CURSOR));
-
-        JButton btnVolverReg = new JButton("Volver");
-        btnVolverReg.setMaximumSize(new Dimension(400, 50));
-        btnVolverReg.setAlignmentX(Component.LEFT_ALIGNMENT);
-        btnVolverReg.setBackground(new Color(60, 60, 60));
-        btnVolverReg.setForeground(Color.WHITE);
-        btnVolverReg.setFont(new Font("Segoe UI", Font.BOLD, 14));
-        btnVolverReg.setFocusPainted(false);
-        btnVolverReg.setBorderPainted(false);
-        btnVolverReg.setCursor(new Cursor(Cursor.HAND_CURSOR));
-
-        panelContenido.add(btnCrear);
-        panelContenido.add(Box.createVerticalStrut(10));
-        panelContenido.add(btnVolverReg);
-
-        JScrollPane scrollPane = new JScrollPane(panelContenido);
-        scrollPane.setPreferredSize(new Dimension(500, 600));
-        scrollPane.setMaximumSize(new Dimension(500, 600));
-        scrollPane.setBorder(null);
-        scrollPane.setBackground(new Color(20, 20, 20));
-        scrollPane.getViewport().setBackground(new Color(20, 20, 20));
-        scrollPane.setHorizontalScrollBarPolicy(JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
-
-        panelPrincipal.add(lblLogo);
-        panelPrincipal.add(Box.createVerticalStrut(15));
-        panelPrincipal.add(scrollPane);
-
-        btnVolverReg.addActionListener(e -> {
             CardLayout cl = (CardLayout) panelContenedor.getLayout();
             cl.show(panelContenedor, "LOGIN");
-        });
+        } else {
+            JOptionPane.showMessageDialog(dialog, 
+                "No se pudo crear la cuenta.\n\nEl correo o DNI ya están registrados.", 
+                "Error en el registro", 
+                JOptionPane.ERROR_MESSAGE);
+            
+            btnCrear.setEnabled(true);
+            btnCrear.setText("Crear cuenta");
+            btnCrear.setBackground(new Color(220, 20, 60));
+        }
+    });
 
-        btnCrear.addActionListener(e -> {
-            String nombre = txtNombre.getText().trim();
-            String apellido = txtApellido.getText().trim();
-            String dniStr = txtDNI.getText().trim();
-            String dia = txtDia.getText().trim();
-            String mes = txtMes.getText().trim();
-            String anio = txtAnio.getText().trim();
-            String correo = txtCorreo.getText().trim();
-            String pass = new String(txtPass.getPassword()).trim();
-            String confirmar = new String(txtConfirmar.getPassword()).trim();
-
-            if (nombre.isEmpty() || apellido.isEmpty() || dniStr.isEmpty() || 
-                dia.isEmpty() || mes.isEmpty() || anio.isEmpty() || 
-                correo.isEmpty() || pass.isEmpty() || confirmar.isEmpty()) {
-                return;
-            }
-
-            int DNI;
-            try {
-                DNI = Integer.parseInt(dniStr);
-                if (DNI <= 0 || dniStr.length() != 8) {
-                    return;
-                }
-            } catch (NumberFormatException ex) {
-                return;
-            }
-
-            int diaInt, mesInt, anioInt;
-            try {
-                diaInt = Integer.parseInt(dia);
-                mesInt = Integer.parseInt(mes);
-                anioInt = Integer.parseInt(anio);
-
-                if (diaInt < 1 || diaInt > 31) {
-                    return;
-                }
-                if (mesInt < 1 || mesInt > 12) {
-                    return;
-                }
-                if (anioInt < 1920 || anioInt > 2024) {
-                    return;
-                }
-
-                if (mesInt == 2) {
-                    boolean esBisiesto = (anioInt % 4 == 0 && anioInt % 100 != 0) || (anioInt % 400 == 0);
-                    if (diaInt > (esBisiesto ? 29 : 28)) {
-                        return;
-                    }
-                } else if (mesInt == 4 || mesInt == 6 || mesInt == 9 || mesInt == 11) {
-                    if (diaInt > 30) {
-                        return;
-                    }
-                }
-            } catch (NumberFormatException ex) {
-                return;
-            }
-
-            java.sql.Date fechaNacimiento;
-            try {
-                String fechaStr = String.format("%04d-%02d-%02d", anioInt, mesInt, diaInt);
-                fechaNacimiento = java.sql.Date.valueOf(fechaStr);
-            } catch (IllegalArgumentException ex) {
-                return;
-            }
-
-            if (!pass.equals(confirmar)) {
-                return;
-            }
-
-            if (!correo.toLowerCase().endsWith("@gmail.com")) {
-                return;
-            }
-
-            if (sistemaLogin.registrarUsuario(nombre, apellido, correo, pass, DNI, fechaNacimiento)) {
-                txtNombre.setText("");
-                txtApellido.setText("");
-                txtDNI.setText("");
-                txtDia.setText("");
-                txtMes.setText("");
-                txtAnio.setText("");
-                txtCorreo.setText("");
-                txtPass.setText("");
-                txtConfirmar.setText("");
-
-                CardLayout cl = (CardLayout) panelContenedor.getLayout();
-                cl.show(panelContenedor, "LOGIN");
-            }
-        });
-
-        return panelPrincipal;
-    }
+    return panelPrincipal;
+}
 
     private void mostrarMensajeError(String mensaje, JLabel[] lblMensajeError, JPanel panelBotones) {
         if (lblMensajeError[0] == null) {
@@ -1780,7 +2212,7 @@ public class VentanaPrincipal extends JFrame {
             lblMensajeError[0].setBorder(BorderFactory.createEmptyBorder(5, 0, 0, 0));
             panelBotones.add(lblMensajeError[0]);
         }
-        lblMensajeError[0].setText("⚠ " + mensaje);
+        lblMensajeError[0].setText(" " + mensaje);
         lblMensajeError[0].setVisible(true);
         panelBotones.revalidate();
         panelBotones.repaint();
@@ -1793,4 +2225,64 @@ public class VentanaPrincipal extends JFrame {
         timer.setRepeats(false);
         timer.start();
     }
+    private boolean validarSoloLetras(String texto) {
+        // Permitir letras (incluyendo acentos), espacios y guiones
+        return texto.matches("^[a-zA-ZáéíóúÁÉÍÓÚñÑ \\-]+$");
+    }
+    private void mostrarMensajeNoVIP() {
+    panelContenido.removeAll();
+    panelContenido.setLayout(new GridBagLayout());
+
+    JPanel panelMensaje = new JPanel();
+    panelMensaje.setLayout(new BoxLayout(panelMensaje, BoxLayout.Y_AXIS));
+    panelMensaje.setBackground(new Color(30, 30, 30));
+    panelMensaje.setBorder(BorderFactory.createEmptyBorder(40, 40, 40, 40));
+
+    // Icono de bloqueo
+    JLabel lblIcono = new JLabel("🔒");
+    lblIcono.setFont(new Font("Segoe UI", Font.BOLD, 80));
+    lblIcono.setForeground(new Color(255, 152, 0));
+    lblIcono.setAlignmentX(Component.CENTER_ALIGNMENT);
+
+    JLabel lblTitulo = new JLabel("Acceso solo para miembros VIP");
+    lblTitulo.setFont(new Font("Segoe UI", Font.BOLD, 28));
+    lblTitulo.setForeground(Color.WHITE);
+    lblTitulo.setAlignmentX(Component.CENTER_ALIGNMENT);
+
+    JLabel lblMensaje = new JLabel("El canje de puntos está disponible únicamente para usuarios VIP");
+    lblMensaje.setFont(new Font("Segoe UI", Font.PLAIN, 16));
+    lblMensaje.setForeground(new Color(180, 180, 180));
+    lblMensaje.setAlignmentX(Component.CENTER_ALIGNMENT);
+
+    JLabel lblInfo = new JLabel("Contacta con atención al cliente para actualizar tu membresía");
+    lblInfo.setFont(new Font("Segoe UI", Font.PLAIN, 14));
+    lblInfo.setForeground(new Color(150, 150, 150));
+    lblInfo.setAlignmentX(Component.CENTER_ALIGNMENT);
+
+    JButton btnVolver = new JButton("Volver al inicio");
+    btnVolver.setPreferredSize(new Dimension(200, 45));
+    btnVolver.setMaximumSize(new Dimension(200, 45));
+    btnVolver.setBackground(new Color(220, 20, 60));
+    btnVolver.setForeground(Color.WHITE);
+    btnVolver.setFont(new Font("Segoe UI", Font.BOLD, 14));
+    btnVolver.setFocusPainted(false);
+    btnVolver.setBorderPainted(false);
+    btnVolver.setCursor(new Cursor(Cursor.HAND_CURSOR));
+    btnVolver.setAlignmentX(Component.CENTER_ALIGNMENT);
+    btnVolver.addActionListener(e -> mostrarBienvenida());
+
+    panelMensaje.add(lblIcono);
+    panelMensaje.add(Box.createVerticalStrut(20));
+    panelMensaje.add(lblTitulo);
+    panelMensaje.add(Box.createVerticalStrut(15));
+    panelMensaje.add(lblMensaje);
+    panelMensaje.add(Box.createVerticalStrut(10));
+    panelMensaje.add(lblInfo);
+    panelMensaje.add(Box.createVerticalStrut(30));
+    panelMensaje.add(btnVolver);
+
+    panelContenido.add(panelMensaje);
+    panelContenido.revalidate();
+    panelContenido.repaint();
+}
 }

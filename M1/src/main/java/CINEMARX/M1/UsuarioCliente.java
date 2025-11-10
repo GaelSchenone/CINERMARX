@@ -83,4 +83,34 @@ public class UsuarioCliente {
     public void setHistorial(VerHistorial historial) {
         this.historial = historial;
     }
+    private String membresia; // "VIP" o "NO VIP"
+
+    // AGREGAR estos getters y setters:
+    public String getMembresia() { 
+        return membresia; 
+    }
+
+    public void setMembresia(String membresia) { 
+        this.membresia = membresia;
+    }
+
+    public boolean esVIP() {
+        return "VIP".equalsIgnoreCase(membresia);
+    }
+
+    // MODIFICAR el constructor completo para incluir membresía:
+    public UsuarioCliente(String nombre, String apellido, String correo, String contrasena, 
+                          int DNI, Date fechaNacimiento, String membresia) {
+        this.nombre = nombre;
+        this.apellido = apellido;
+        this.correo = correo;
+        this.contrasena = contrasena;
+        this.DNI = DNI;
+        this.fechaNacimiento = fechaNacimiento;
+        this.membresia = membresia; //  NUEVO
+
+        DateTimeFormatter formato = DateTimeFormatter.ofPattern("dd/MM/yyyy");
+        this.fechaRegistro = LocalDate.now().format(formato);
+        this.esVIP = "VIP".equalsIgnoreCase(membresia); //  ACTUALIZADO
+    }
 }

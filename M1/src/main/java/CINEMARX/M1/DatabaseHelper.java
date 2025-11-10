@@ -48,11 +48,11 @@ public class DatabaseHelper {
             String sqlCliente = "INSERT INTO Cliente (DNI, Membresia, Mail, Contrasena, Puntos, PuntosGastados) VALUES (?, ?, ?, ?, ?, ?)";
             try (PreparedStatement pstmt = connection.prepareStatement(sqlCliente)) {
                 pstmt.setInt(1, DNI);
-                pstmt.setString(2, "NO VIP"); // Membresía por defecto
+                pstmt.setString(2, "NO VIP");
                 pstmt.setString(3, correo);
                 pstmt.setString(4, contrasena);
-                pstmt.setInt(5, 0); // INICIAR CON 0 PUNTOS
-                pstmt.setInt(6, 0); // INICIAR CON 0 PUNTOS GASTADOS
+                pstmt.setInt(5, 0);
+                pstmt.setInt(6, 0);
                 pstmt.executeUpdate();
             }
             
@@ -123,48 +123,48 @@ public class DatabaseHelper {
                      "FROM Cliente c " +
                      "INNER JOIN Usuario u ON c.DNI = u.DNI " +
                      "WHERE c.Mail = ? AND c.Contrasena = ?";
-        
+
         try (PreparedStatement pstmt = connection.prepareStatement(sql)) {
             pstmt.setString(1, correo);
             pstmt.setString(2, contrasena);
-            
+
             try (ResultSet rs = pstmt.executeQuery()) {
                 if (rs.next()) {
                     String nombre = rs.getString("Nombre");
                     String apellido = rs.getString("Apellido");
                     int dni = rs.getInt("DNI");
                     Date fechaNac = rs.getDate("FechaNac");
-                    
-                    // Crear objeto UsuarioCliente con los datos de la BD
+                    String membresia = rs.getString("Membresia"); // ✅ OBTENER MEMBRESÍA
+
                     UsuarioCliente usuario = new UsuarioCliente(
                         nombre,
                         apellido,
                         correo,
                         contrasena,
                         dni,
-                        fechaNac
+                        fechaNac,
+                        membresia // ✅ PASAR MEMBRESÍA
                     );
-                    
+
                     return usuario;
                 }
             }
-            
+
         } catch (SQLException e) {
             e.printStackTrace();
         }
-        
+
         return null;
     }
     
     /**
-     * Actualiza los datos de un cliente (versión completa y corregida)
+     * Actualiza los datos de un cliente
      */
     public boolean actualizarDatosCliente(String correoActual, String nuevoNombre, String nuevoApellido,
                                          String nuevoCorreo, String nuevaContrasena, int nuevoDNI, Date nuevaFechaNac) {
         try {
             connection.setAutoCommit(false);
             
-            // Obtener el DNI actual del cliente
             int dniActual = -1;
             String sqlGetDNI = "SELECT DNI FROM Cliente WHERE Mail = ?";
             try (PreparedStatement pstmt = connection.prepareStatement(sqlGetDNI)) {
@@ -180,21 +180,18 @@ public class DatabaseHelper {
                 }
             }
             
-            // Si el DNI cambió, verificar que el nuevo no exista (solo si es diferente al actual)
             if (nuevoDNI != dniActual && existeDNI(nuevoDNI)) {
                 connection.rollback();
                 connection.setAutoCommit(true);
                 return false;
             }
             
-            // Si el correo cambió, verificar que el nuevo no exista (solo si es diferente al actual)
             if (!nuevoCorreo.equals(correoActual) && existeCorreo(nuevoCorreo)) {
                 connection.rollback();
                 connection.setAutoCommit(true);
                 return false;
             }
             
-            // Actualizar Cliente primero (mail, contraseña - SIN cambiar DNI aún)
             String sqlCliente = "UPDATE Cliente SET Mail = ?, Contrasena = ? WHERE DNI = ?";
             try (PreparedStatement pstmt = connection.prepareStatement(sqlCliente)) {
                 pstmt.setString(1, nuevoCorreo);
@@ -203,7 +200,6 @@ public class DatabaseHelper {
                 pstmt.executeUpdate();
             }
             
-            // Actualizar Usuario (nombre, apellido y fecha de nacimiento - SIN cambiar DNI aún)
             String sqlUsuario = "UPDATE Usuario SET Nombre = ?, Apellido = ?, FechaNac = ? WHERE DNI = ?";
             try (PreparedStatement pstmt = connection.prepareStatement(sqlUsuario)) {
                 pstmt.setString(1, nuevoNombre);
@@ -213,9 +209,7 @@ public class DatabaseHelper {
                 pstmt.executeUpdate();
             }
             
-            // Si el DNI cambió, actualizarlo AL FINAL en ambas tablas
             if (nuevoDNI != dniActual) {
-                // Actualizar DNI en Usuario
                 String sqlUpdateDNIUsuario = "UPDATE Usuario SET DNI = ? WHERE DNI = ?";
                 try (PreparedStatement pstmt = connection.prepareStatement(sqlUpdateDNIUsuario)) {
                     pstmt.setInt(1, nuevoDNI);
@@ -223,7 +217,6 @@ public class DatabaseHelper {
                     pstmt.executeUpdate();
                 }
                 
-                // Actualizar DNI en Cliente
                 String sqlUpdateDNICliente = "UPDATE Cliente SET DNI = ? WHERE DNI = ?";
                 try (PreparedStatement pstmt = connection.prepareStatement(sqlUpdateDNICliente)) {
                     pstmt.setInt(1, nuevoDNI);
@@ -313,7 +306,6 @@ public class DatabaseHelper {
         try {
             connection.setAutoCommit(false);
             
-            // Obtener ID del cliente
             int idCliente = obtenerIdCliente(correo);
             if (idCliente == -1) {
                 connection.rollback();
@@ -321,7 +313,6 @@ public class DatabaseHelper {
                 return false;
             }
             
-            // Verificar que tenga suficientes puntos
             int puntosActuales = obtenerPuntosCliente(correo);
             if (puntosActuales < puntos) {
                 connection.rollback();
@@ -329,7 +320,42 @@ public class DatabaseHelper {
                 return false;
             }
             
-            // Restar puntos y sumar a PuntosGastados
+            String numComprobante = "CANJE-" + System.currentTimeMillis();
+            String sqlComprobante = "INSERT INTO Comprobante (NumComprobante, ID_Cliente, FechaCompra, MetodoPago, Canjeado) " +
+                                   "VALUES (?, ?, NOW(), 'Canje de puntos', 'SI')";
+            int idComprobante;
+            
+            try (PreparedStatement pstmt = connection.prepareStatement(sqlComprobante, Statement.RETURN_GENERATED_KEYS)) {
+                pstmt.setString(1, numComprobante);
+                pstmt.setInt(2, idCliente);
+                pstmt.executeUpdate();
+                
+                try (ResultSet rs = pstmt.getGeneratedKeys()) {
+                    if (rs.next()) {
+                        idComprobante = rs.getInt(1);
+                    } else {
+                        connection.rollback();
+                        connection.setAutoCommit(true);
+                        return false;
+                    }
+                }
+            }
+            
+            int idProducto = buscarOCrearProductoCanje(producto, puntos);
+            if (idProducto == -1) {
+                connection.rollback();
+                connection.setAutoCommit(true);
+                return false;
+            }
+            
+            String sqlCompProducto = "INSERT INTO Comprobante_Producto (ID_Comprobante, ID_Prod, Cantidad) " +
+                                    "VALUES (?, ?, 1)";
+            try (PreparedStatement pstmt = connection.prepareStatement(sqlCompProducto)) {
+                pstmt.setInt(1, idComprobante);
+                pstmt.setInt(2, idProducto);
+                pstmt.executeUpdate();
+            }
+            
             String sqlUpdate = "UPDATE Cliente SET Puntos = Puntos - ?, PuntosGastados = PuntosGastados + ? WHERE Mail = ?";
             try (PreparedStatement pstmt = connection.prepareStatement(sqlUpdate)) {
                 pstmt.setInt(1, puntos);
@@ -338,17 +364,9 @@ public class DatabaseHelper {
                 pstmt.executeUpdate();
             }
             
-            // Registrar el canje en la tabla Canje
-            String sqlInsert = "INSERT INTO Canje (ID_Cliente, Producto, Puntos) VALUES (?, ?, ?)";
-            try (PreparedStatement pstmt = connection.prepareStatement(sqlInsert)) {
-                pstmt.setInt(1, idCliente);
-                pstmt.setString(2, producto);
-                pstmt.setInt(3, puntos);
-                pstmt.executeUpdate();
-            }
-            
             connection.commit();
             connection.setAutoCommit(true);
+            System.out.println("✅ Canje registrado exitosamente - Comprobante: " + numComprobante);
             return true;
             
         } catch (SQLException e) {
@@ -362,32 +380,48 @@ public class DatabaseHelper {
             return false;
         }
     }
-    
+
     /**
-     * Obtiene el historial de canjes de un cliente desde la base de datos
+     * Busca un producto de canje o lo crea si no existe
      */
-    public ResultSet obtenerHistorialCanjes(String correo) {
-        String sql = "SELECT c.FechaCanje, c.Producto, c.Puntos " +
-                     "FROM Canje c " +
-                     "INNER JOIN Cliente cl ON c.ID_Cliente = cl.ID_Cliente " +
-                     "WHERE cl.Mail = ? " +
-                     "ORDER BY c.FechaCanje DESC";
+    private int buscarOCrearProductoCanje(String nombreProducto, int puntos) {
+        String sqlBuscar = "SELECT ID_Prod FROM Producto WHERE Nombre = ? AND Categoria = 'Canje'";
         
-        try {
-            PreparedStatement pstmt = connection.prepareStatement(sql);
-            pstmt.setString(1, correo);
-            return pstmt.executeQuery();
+        try (PreparedStatement pstmt = connection.prepareStatement(sqlBuscar)) {
+            pstmt.setString(1, nombreProducto);
             
+            try (ResultSet rs = pstmt.executeQuery()) {
+                if (rs.next()) {
+                    return rs.getInt("ID_Prod");
+                }
+            }
         } catch (SQLException e) {
             e.printStackTrace();
-            return null;
+            return -1;
         }
+        
+        String sqlInsertar = "INSERT INTO Producto (Nombre, Precio, Categoria) VALUES (?, ?, 'Canje')";
+        
+        try (PreparedStatement pstmt = connection.prepareStatement(sqlInsertar, Statement.RETURN_GENERATED_KEYS)) {
+            pstmt.setString(1, nombreProducto);
+            pstmt.setDouble(2, 0.00);
+            pstmt.executeUpdate();
+            
+            try (ResultSet rs = pstmt.getGeneratedKeys()) {
+                if (rs.next()) {
+                    return rs.getInt(1);
+                }
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        
+        return -1;
     }
     
     /**
-     * Obtiene el historial de compras de un cliente (BOLETOS + PRODUCTOS)
-     * Retorna un ResultSet con: Fecha, Descripcion, Precio, Tipo
-     * VERSIÓN MEJORADA CON MEJOR MANEJO DE ERRORES Y DEBUG
+     * Obtiene el historial de compras de un cliente (BOLETOS + PRODUCTOS + CANJES)
+     * INCLUYE PUNTOS GASTADOS EN LA CONSULTA
      */
     public ResultSet obtenerHistorialCompras(String correo) {
         String sql = 
@@ -395,7 +429,8 @@ public class DatabaseHelper {
             "    comp.FechaCompra as Fecha, " +
             "    CONCAT(cb.Cantidad, 'x Entrada ', p.Titulo, ' - ', s.TipoDeSala) as Descripcion, " +
             "    (f.Precio * cb.Cantidad) as Precio, " +
-            "    'BOLETO' as Tipo " +
+            "    'BOLETO' as Tipo, " +
+            "    0 as PuntosGastados " +
             "FROM Comprobante comp " +
             "INNER JOIN Cliente c ON comp.ID_Cliente = c.ID_Cliente " +
             "INNER JOIN Comprobante_Boleto cb ON comp.ID_Comprobante = cb.ID_Comprobante " +
@@ -407,9 +442,28 @@ public class DatabaseHelper {
             "UNION ALL " +
             "SELECT " +
             "    comp.FechaCompra as Fecha, " +
-            "    CONCAT(cp.Cantidad, 'x ', prod.Nombre) as Descripcion, " +
-            "    (prod.Precio * cp.Cantidad) as Precio, " +
-            "    'PRODUCTO' as Tipo " +
+            "    CASE " +
+            "        WHEN comp.Canjeado = 'SI' THEN CONCAT(cp.Cantidad, 'x ', prod.Nombre, ' (CANJEADO)') " +
+            "        ELSE CONCAT(cp.Cantidad, 'x ', prod.Nombre) " +
+            "    END as Descripcion, " +
+            "    CASE " +
+            "        WHEN comp.Canjeado = 'SI' THEN 0.00 " +
+            "        ELSE (prod.Precio * cp.Cantidad) " +
+            "    END as Precio, " +
+            "    CASE " +
+            "        WHEN comp.Canjeado = 'SI' THEN 'CANJE' " +
+            "        ELSE 'PRODUCTO' " +
+            "    END as Tipo, " +
+            "    CASE " +
+            "        WHEN comp.Canjeado = 'SI' THEN " +
+            "            CASE " +
+            "                WHEN prod.Nombre LIKE '%COMBO%' THEN 500 " +
+            "                WHEN prod.Nombre LIKE '%WONKA%' THEN 1500 " +
+            "                WHEN prod.Nombre LIKE '%OPPENHEIMER%' THEN 1500 " +
+            "                ELSE 0 " +
+            "            END " +
+            "        ELSE 0 " +
+            "    END as PuntosGastados " +
             "FROM Comprobante comp " +
             "INNER JOIN Cliente c ON comp.ID_Cliente = c.ID_Cliente " +
             "INNER JOIN Comprobante_Producto cp ON comp.ID_Comprobante = cp.ID_Comprobante " +
@@ -424,11 +478,8 @@ public class DatabaseHelper {
             
             ResultSet rs = pstmt.executeQuery();
             
-            // Debug: Verificar si hay resultados
             if (!rs.isBeforeFirst()) {
                 System.out.println("⚠️ No se encontraron compras para el correo: " + correo);
-                System.out.println("💡 Verificando si el cliente existe...");
-                verificarDatosCliente(correo);
             } else {
                 System.out.println("✅ Historial de compras cargado exitosamente para: " + correo);
             }
@@ -468,51 +519,12 @@ public class DatabaseHelper {
     }
     
     /**
-     * Método de diagnóstico para verificar datos del cliente
-     */
-    private void verificarDatosCliente(String correo) {
-        try {
-            // Verificar si el cliente existe
-            String sqlCliente = "SELECT ID_Cliente, DNI, Nombre, Apellido FROM Cliente c " +
-                               "INNER JOIN Usuario u ON c.DNI = u.DNI " +
-                               "WHERE c.Mail = ?";
-            
-            try (PreparedStatement pstmt = connection.prepareStatement(sqlCliente)) {
-                pstmt.setString(1, correo);
-                try (ResultSet rs = pstmt.executeQuery()) {
-                    if (rs.next()) {
-                        int idCliente = rs.getInt("ID_Cliente");
-                        System.out.println("✓ Cliente encontrado - ID: " + idCliente);
-                        
-                        // Verificar comprobantes
-                        String sqlComprobantes = "SELECT COUNT(*) as total FROM Comprobante WHERE ID_Cliente = ?";
-                        try (PreparedStatement pstmt2 = connection.prepareStatement(sqlComprobantes)) {
-                            pstmt2.setInt(1, idCliente);
-                            try (ResultSet rs2 = pstmt2.executeQuery()) {
-                                if (rs2.next()) {
-                                    System.out.println("📝 Comprobantes registrados: " + rs2.getInt("total"));
-                                }
-                            }
-                        }
-                    } else {
-                        System.out.println("✗ Cliente NO encontrado con el correo: " + correo);
-                    }
-                }
-            }
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
-    }
-    
-    /**
      * Inserta datos de prueba para testing
-     * ÚTIL PARA DESARROLLO Y PRUEBAS
      */
     public boolean insertarDatosPrueba(String correo) {
         try {
             connection.setAutoCommit(false);
             
-            // Obtener ID del cliente
             int idCliente = obtenerIdCliente(correo);
             if (idCliente == -1) {
                 System.out.println("❌ Cliente no encontrado para correo: " + correo);
@@ -521,9 +533,8 @@ public class DatabaseHelper {
                 return false;
             }
             
-            System.out.println("🔄 Insertando datos de prueba para cliente ID: " + idCliente);
+            System.out.println("📄 Insertando datos de prueba para cliente ID: " + idCliente);
             
-            // 1. Crear un comprobante
             String sqlComprobante = "INSERT INTO Comprobante (NumComprobante, ID_Cliente, FechaCompra, MetodoPago, Canjeado) " +
                                    "VALUES (?, ?, NOW(), 'Tarjeta de crédito', 'NO')";
             int idComprobante;
@@ -536,7 +547,7 @@ public class DatabaseHelper {
                 try (ResultSet rs = pstmt.getGeneratedKeys()) {
                     if (rs.next()) {
                         idComprobante = rs.getInt(1);
-                        System.out.println("✓ Comprobante creado - ID: " + idComprobante);
+                        System.out.println("✔ Comprobante creado - ID: " + idComprobante);
                     } else {
                         connection.rollback();
                         connection.setAutoCommit(true);
@@ -545,7 +556,6 @@ public class DatabaseHelper {
                 }
             }
             
-            // 2. Buscar una función disponible y crear un boleto
             String sqlBuscarFuncion = "SELECT f.ID_Funcion, f.Precio FROM Funcion f LIMIT 1";
             
             try (PreparedStatement pstmt = connection.prepareStatement(sqlBuscarFuncion);
@@ -554,7 +564,6 @@ public class DatabaseHelper {
                 if (rs.next()) {
                     int idFuncion = rs.getInt("ID_Funcion");
                     
-                    // Crear un boleto de prueba
                     String sqlBoleto = "INSERT INTO Boleto (NumeroButaca, ID_Funcion, ID_Cliente) VALUES (?, ?, ?)";
                     int idBoleto;
                     
@@ -567,17 +576,16 @@ public class DatabaseHelper {
                         try (ResultSet rs2 = pstmt2.getGeneratedKeys()) {
                             if (rs2.next()) {
                                 idBoleto = rs2.getInt(1);
-                                System.out.println("✓ Boleto creado - ID: " + idBoleto);
+                                System.out.println("✔ Boleto creado - ID: " + idBoleto);
                                 
-                                // Asociar boleto al comprobante
                                 String sqlCompBoleto = "INSERT INTO Comprobante_Boleto (ID_Comprobante, ID_Boleto, Cantidad) " +
                                                       "VALUES (?, ?, ?)";
                                 try (PreparedStatement pstmt3 = connection.prepareStatement(sqlCompBoleto)) {
                                     pstmt3.setInt(1, idComprobante);
                                     pstmt3.setInt(2, idBoleto);
-                                    pstmt3.setInt(3, 2); // 2 boletos
+                                    pstmt3.setInt(3, 2);
                                     pstmt3.executeUpdate();
-                                    System.out.println("✓ Relación Comprobante-Boleto creada");
+                                    System.out.println("✔ Relación Comprobante-Boleto creada");
                                 }
                             }
                         }
@@ -587,7 +595,6 @@ public class DatabaseHelper {
                 }
             }
             
-            // 3. Buscar un producto y asociarlo
             String sqlBuscarProducto = "SELECT ID_Prod FROM Producto LIMIT 1";
             
             try (PreparedStatement pstmt = connection.prepareStatement(sqlBuscarProducto);
@@ -603,7 +610,7 @@ public class DatabaseHelper {
                         pstmt2.setInt(2, idProducto);
                         pstmt2.setInt(3, 1);
                         pstmt2.executeUpdate();
-                        System.out.println("✓ Producto asociado al comprobante");
+                        System.out.println("✔ Producto asociado al comprobante");
                     }
                 } else {
                     System.out.println("⚠️ No hay productos disponibles para asociar");
@@ -629,7 +636,7 @@ public class DatabaseHelper {
     }
     
     /**
-     * Obtiene los datos personales del usuario (nombre y apellido de la tabla Usuario)
+     * Obtiene los datos personales del usuario
      */
     public String[] obtenerDatosPersonales(String correo) {
         String sql = "SELECT u.Nombre, u.Apellido FROM Usuario u " +
