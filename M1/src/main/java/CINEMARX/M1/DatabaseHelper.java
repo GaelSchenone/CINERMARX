@@ -134,7 +134,7 @@ public class DatabaseHelper {
                     String apellido = rs.getString("Apellido");
                     int dni = rs.getInt("DNI");
                     Date fechaNac = rs.getDate("FechaNac");
-                    String membresia = rs.getString("Membresia"); // ✅ OBTENER MEMBRESÍA
+                    String membresia = rs.getString("Membresia");
 
                     UsuarioCliente usuario = new UsuarioCliente(
                         nombre,
@@ -143,7 +143,7 @@ public class DatabaseHelper {
                         contrasena,
                         dni,
                         fechaNac,
-                        membresia // ✅ PASAR MEMBRESÍA
+                        membresia
                     );
 
                     return usuario;
@@ -300,6 +300,24 @@ public class DatabaseHelper {
     }
     
     /**
+     * Obtiene los puntos asociados a un producto según su nombre
+     */
+    private int obtenerPuntosPorProducto(String nombreProducto) {
+        switch (nombreProducto.toUpperCase()) {
+            case "COMBO PANCHO":
+                return 2000;
+            case "COMBO POCHOCLO":
+                return 5000;
+            case "COMBO NACHOS":
+                return 2000;
+            case "GASEOSA":
+                return 1500;
+            default:
+                return 0;
+        }
+    }
+    
+    /**
      * Registra un canje de puntos y actualiza los puntos del cliente
      */
     public boolean registrarCanje(String correo, String producto, int puntos) {
@@ -421,7 +439,7 @@ public class DatabaseHelper {
     
     /**
      * Obtiene el historial de compras de un cliente (BOLETOS + PRODUCTOS + CANJES)
-     * INCLUYE PUNTOS GASTADOS EN LA CONSULTA
+     * CORREGIDO: Ahora muestra correctamente los puntos gastados según el producto
      */
     public ResultSet obtenerHistorialCompras(String correo) {
         String sql = 
@@ -457,9 +475,10 @@ public class DatabaseHelper {
             "    CASE " +
             "        WHEN comp.Canjeado = 'SI' THEN " +
             "            CASE " +
-            "                WHEN prod.Nombre LIKE '%COMBO%' THEN 500 " +
-            "                WHEN prod.Nombre LIKE '%WONKA%' THEN 1500 " +
-            "                WHEN prod.Nombre LIKE '%OPPENHEIMER%' THEN 1500 " +
+            "                WHEN UPPER(prod.Nombre) = 'COMBO PANCHO' THEN 2000 " +
+            "                WHEN UPPER(prod.Nombre) = 'COMBO POCHOCLO' THEN 5000 " +
+            "                WHEN UPPER(prod.Nombre) = 'COMBO NACHOS' THEN 2000 " +
+            "                WHEN UPPER(prod.Nombre) = 'GASEOSA' THEN 1500 " +
             "                ELSE 0 " +
             "            END " +
             "        ELSE 0 " +
@@ -516,123 +535,6 @@ public class DatabaseHelper {
         }
         
         return false;
-    }
-    
-    /**
-     * Inserta datos de prueba para testing
-     */
-    public boolean insertarDatosPrueba(String correo) {
-        try {
-            connection.setAutoCommit(false);
-            
-            int idCliente = obtenerIdCliente(correo);
-            if (idCliente == -1) {
-                System.out.println("❌ Cliente no encontrado para correo: " + correo);
-                connection.rollback();
-                connection.setAutoCommit(true);
-                return false;
-            }
-            
-            System.out.println("📄 Insertando datos de prueba para cliente ID: " + idCliente);
-            
-            String sqlComprobante = "INSERT INTO Comprobante (NumComprobante, ID_Cliente, FechaCompra, MetodoPago, Canjeado) " +
-                                   "VALUES (?, ?, NOW(), 'Tarjeta de crédito', 'NO')";
-            int idComprobante;
-            
-            try (PreparedStatement pstmt = connection.prepareStatement(sqlComprobante, Statement.RETURN_GENERATED_KEYS)) {
-                pstmt.setString(1, "TEST-" + System.currentTimeMillis());
-                pstmt.setInt(2, idCliente);
-                pstmt.executeUpdate();
-                
-                try (ResultSet rs = pstmt.getGeneratedKeys()) {
-                    if (rs.next()) {
-                        idComprobante = rs.getInt(1);
-                        System.out.println("✔ Comprobante creado - ID: " + idComprobante);
-                    } else {
-                        connection.rollback();
-                        connection.setAutoCommit(true);
-                        return false;
-                    }
-                }
-            }
-            
-            String sqlBuscarFuncion = "SELECT f.ID_Funcion, f.Precio FROM Funcion f LIMIT 1";
-            
-            try (PreparedStatement pstmt = connection.prepareStatement(sqlBuscarFuncion);
-                 ResultSet rs = pstmt.executeQuery()) {
-                
-                if (rs.next()) {
-                    int idFuncion = rs.getInt("ID_Funcion");
-                    
-                    String sqlBoleto = "INSERT INTO Boleto (NumeroButaca, ID_Funcion, ID_Cliente) VALUES (?, ?, ?)";
-                    int idBoleto;
-                    
-                    try (PreparedStatement pstmt2 = connection.prepareStatement(sqlBoleto, Statement.RETURN_GENERATED_KEYS)) {
-                        pstmt2.setString(1, "A-TEST");
-                        pstmt2.setInt(2, idFuncion);
-                        pstmt2.setInt(3, idCliente);
-                        pstmt2.executeUpdate();
-                        
-                        try (ResultSet rs2 = pstmt2.getGeneratedKeys()) {
-                            if (rs2.next()) {
-                                idBoleto = rs2.getInt(1);
-                                System.out.println("✔ Boleto creado - ID: " + idBoleto);
-                                
-                                String sqlCompBoleto = "INSERT INTO Comprobante_Boleto (ID_Comprobante, ID_Boleto, Cantidad) " +
-                                                      "VALUES (?, ?, ?)";
-                                try (PreparedStatement pstmt3 = connection.prepareStatement(sqlCompBoleto)) {
-                                    pstmt3.setInt(1, idComprobante);
-                                    pstmt3.setInt(2, idBoleto);
-                                    pstmt3.setInt(3, 2);
-                                    pstmt3.executeUpdate();
-                                    System.out.println("✔ Relación Comprobante-Boleto creada");
-                                }
-                            }
-                        }
-                    }
-                } else {
-                    System.out.println("⚠️ No hay funciones disponibles para crear boleto de prueba");
-                }
-            }
-            
-            String sqlBuscarProducto = "SELECT ID_Prod FROM Producto LIMIT 1";
-            
-            try (PreparedStatement pstmt = connection.prepareStatement(sqlBuscarProducto);
-                 ResultSet rs = pstmt.executeQuery()) {
-                
-                if (rs.next()) {
-                    int idProducto = rs.getInt("ID_Prod");
-                    
-                    String sqlCompProducto = "INSERT INTO Comprobante_Producto (ID_Comprobante, ID_Prod, Cantidad) " +
-                                            "VALUES (?, ?, ?)";
-                    try (PreparedStatement pstmt2 = connection.prepareStatement(sqlCompProducto)) {
-                        pstmt2.setInt(1, idComprobante);
-                        pstmt2.setInt(2, idProducto);
-                        pstmt2.setInt(3, 1);
-                        pstmt2.executeUpdate();
-                        System.out.println("✔ Producto asociado al comprobante");
-                    }
-                } else {
-                    System.out.println("⚠️ No hay productos disponibles para asociar");
-                }
-            }
-            
-            connection.commit();
-            connection.setAutoCommit(true);
-            System.out.println("✅ Datos de prueba insertados exitosamente");
-            return true;
-            
-        } catch (SQLException e) {
-            try {
-                connection.rollback();
-                connection.setAutoCommit(true);
-            } catch (SQLException ex) {
-                ex.printStackTrace();
-            }
-            System.err.println("❌ Error al insertar datos de prueba:");
-            e.printStackTrace();
-            return false;
-        }
     }
     
     /**

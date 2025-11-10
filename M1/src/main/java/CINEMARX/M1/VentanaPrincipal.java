@@ -1236,69 +1236,132 @@ private void mostrarHistorial() {
         panelContenido.repaint();
     }
 
-    private void mostrarPantallaCanjeoExitoso(String producto, int puntos) {
-        panelContenido.removeAll();
-        panelContenido.setLayout(new GridBagLayout());
+private void mostrarPantallaCanjeoExitoso(String producto, int puntos) {
+    panelContenido.removeAll();
+    panelContenido.setLayout(new GridBagLayout());
 
-        JPanel panelExito = new JPanel();
-        panelExito.setLayout(new BoxLayout(panelExito, BoxLayout.Y_AXIS));
-        panelExito.setBackground(new Color(30, 30, 30));
-        panelExito.setBorder(BorderFactory.createEmptyBorder(40, 40, 40, 40));
+    JPanel panelExito = new JPanel();
+    panelExito.setLayout(new BoxLayout(panelExito, BoxLayout.Y_AXIS));
+    panelExito.setBackground(new Color(30, 30, 30));
+    panelExito.setBorder(BorderFactory.createEmptyBorder(40, 40, 40, 40));
 
-        // Ícono de éxito
-        JLabel lblIcono = new JLabel("✓");
-        lblIcono.setFont(new Font("Segoe UI", Font.BOLD, 80));
-        lblIcono.setForeground(new Color(76, 175, 80));
-        lblIcono.setAlignmentX(Component.CENTER_ALIGNMENT);
+    // Panel para la imagen del producto con borde verde
+    JPanel panelImagenContainer = new JPanel();
+    panelImagenContainer.setLayout(new BorderLayout());
+    panelImagenContainer.setBackground(new Color(30, 30, 30));
+    panelImagenContainer.setBorder(BorderFactory.createLineBorder(new Color(76, 175, 80), 4));
+    panelImagenContainer.setMaximumSize(new Dimension(200, 200));
+    panelImagenContainer.setPreferredSize(new Dimension(200, 200));
+    panelImagenContainer.setAlignmentX(Component.CENTER_ALIGNMENT);
 
-        JLabel lblTitulo = new JLabel("¡Canje exitoso!");
-        lblTitulo.setFont(new Font("Segoe UI", Font.BOLD, 32));
-        lblTitulo.setForeground(Color.WHITE);
-        lblTitulo.setAlignmentX(Component.CENTER_ALIGNMENT);
+    JLabel lblImagenProducto = new JLabel();
+    lblImagenProducto.setHorizontalAlignment(SwingConstants.CENTER);
+    lblImagenProducto.setVerticalAlignment(SwingConstants.CENTER);
 
-        JLabel lblProducto = new JLabel(producto);
-        lblProducto.setFont(new Font("Segoe UI", Font.PLAIN, 18));
-        lblProducto.setForeground(new Color(180, 180, 180));
-        lblProducto.setAlignmentX(Component.CENTER_ALIGNMENT);
-
-        JLabel lblPuntos = new JLabel(puntos + " puntos utilizados");
-        lblPuntos.setFont(new Font("Segoe UI", Font.BOLD, 16));
-        lblPuntos.setForeground(new Color(220, 20, 60));
-        lblPuntos.setAlignmentX(Component.CENTER_ALIGNMENT);
-
-        JLabel lblRestantes = new JLabel("Puntos restantes: " + puntosUsuario);
-        lblRestantes.setFont(new Font("Segoe UI", Font.PLAIN, 15));
-        lblRestantes.setForeground(new Color(150, 150, 150));
-        lblRestantes.setAlignmentX(Component.CENTER_ALIGNMENT);
-
-        JButton btnVolver = new JButton("Volver a canjes");
-        btnVolver.setPreferredSize(new Dimension(200, 45));
-        btnVolver.setMaximumSize(new Dimension(200, 45));
-        btnVolver.setBackground(new Color(220, 20, 60));
-        btnVolver.setForeground(Color.WHITE);
-        btnVolver.setFont(new Font("Segoe UI", Font.BOLD, 14));
-        btnVolver.setFocusPainted(false);
-        btnVolver.setBorderPainted(false);
-        btnVolver.setCursor(new Cursor(Cursor.HAND_CURSOR));
-        btnVolver.setAlignmentX(Component.CENTER_ALIGNMENT);
-        btnVolver.addActionListener(e -> mostrarCanjePuntos());
-
-        panelExito.add(lblIcono);
-        panelExito.add(Box.createVerticalStrut(20));
-        panelExito.add(lblTitulo);
-        panelExito.add(Box.createVerticalStrut(15));
-        panelExito.add(lblProducto);
-        panelExito.add(Box.createVerticalStrut(10));
-        panelExito.add(lblPuntos);
-        panelExito.add(Box.createVerticalStrut(10));
-        panelExito.add(lblRestantes);
-        panelExito.add(Box.createVerticalStrut(30));
-        panelExito.add(btnVolver);
-
-        panelContenido.add(panelExito);
-        panelContenido.revalidate();
-        panelContenido.repaint();
+    // Obtener la URL de la imagen según el producto
+    String urlImagen = "";
+    int anchoImg = 180;
+    int altoImg = 180;
+    
+    switch(producto.toUpperCase()) {
+        case "COMBO PANCHO":
+            urlImagen = "https://gaelschenone.aguilucho.ar/source_cmx/index.php?preview=M7%2F8.png";
+            break;
+        case "COMBO POCHOCLO":
+            urlImagen = "https://gaelschenone.aguilucho.ar/source_cmx/index.php?preview=M7%2F9.png";
+            break;
+        case "COMBO NACHOS":
+            urlImagen = "https://gaelschenone.aguilucho.ar/source_cmx/index.php?preview=M7%2F7.png";
+            break;
+        case "GASEOSA":
+            urlImagen = "https://gaelschenone.aguilucho.ar/source_cmx/index.php?preview=M7%2F5.png";
+            break;
+        default:
+            System.out.println("Producto no reconocido: " + producto);
     }
+
+    System.out.println("Intentando cargar imagen para: " + producto);
+    System.out.println("URL: " + urlImagen);
+
+    if (!urlImagen.isEmpty()) {
+        try {
+            java.net.URL url = new java.net.URL(urlImagen);
+            ImageIcon icon = new ImageIcon(url);
+            
+            // Verificar si la imagen se cargó correctamente
+            if (icon.getImageLoadStatus() == MediaTracker.COMPLETE) {
+                Image img = icon.getImage().getScaledInstance(anchoImg, altoImg, Image.SCALE_SMOOTH);
+                lblImagenProducto.setIcon(new ImageIcon(img));
+                System.out.println("Imagen cargada exitosamente");
+            } else {
+                System.out.println("Error al cargar la imagen");
+                lblImagenProducto.setText(" ");
+                lblImagenProducto.setFont(new Font("Segoe UI", Font.BOLD, 80));
+                lblImagenProducto.setForeground(new Color(76, 175, 80));
+            }
+        } catch (Exception e) {
+            System.out.println("Excepción al cargar imagen: " + e.getMessage());
+            e.printStackTrace();
+            lblImagenProducto.setText("");
+            lblImagenProducto.setFont(new Font("Segoe UI", Font.BOLD, 80));
+            lblImagenProducto.setForeground(new Color(76, 175, 80));
+        }
+    } else {
+        lblImagenProducto.setText("✓");
+        lblImagenProducto.setFont(new Font("Segoe UI", Font.BOLD, 80));
+        lblImagenProducto.setForeground(new Color(76, 175, 80));
+    }
+
+    panelImagenContainer.add(lblImagenProducto, BorderLayout.CENTER);
+
+    JLabel lblTitulo = new JLabel("¡Canje exitoso!");
+    lblTitulo.setFont(new Font("Segoe UI", Font.BOLD, 32));
+    lblTitulo.setForeground(Color.WHITE);
+    lblTitulo.setAlignmentX(Component.CENTER_ALIGNMENT);
+
+    JLabel lblProducto = new JLabel(producto);
+    lblProducto.setFont(new Font("Segoe UI", Font.PLAIN, 18));
+    lblProducto.setForeground(new Color(180, 180, 180));
+    lblProducto.setAlignmentX(Component.CENTER_ALIGNMENT);
+
+    JLabel lblPuntos = new JLabel(puntos + " puntos utilizados");
+    lblPuntos.setFont(new Font("Segoe UI", Font.BOLD, 16));
+    lblPuntos.setForeground(new Color(220, 20, 60));
+    lblPuntos.setAlignmentX(Component.CENTER_ALIGNMENT);
+
+    JLabel lblRestantes = new JLabel("Puntos restantes: " + puntosUsuario);
+    lblRestantes.setFont(new Font("Segoe UI", Font.PLAIN, 15));
+    lblRestantes.setForeground(new Color(150, 150, 150));
+    lblRestantes.setAlignmentX(Component.CENTER_ALIGNMENT);
+
+    JButton btnVolver = new JButton("Volver a canjes");
+    btnVolver.setPreferredSize(new Dimension(200, 45));
+    btnVolver.setMaximumSize(new Dimension(200, 45));
+    btnVolver.setBackground(new Color(220, 20, 60));
+    btnVolver.setForeground(Color.WHITE);
+    btnVolver.setFont(new Font("Segoe UI", Font.BOLD, 14));
+    btnVolver.setFocusPainted(false);
+    btnVolver.setBorderPainted(false);
+    btnVolver.setCursor(new Cursor(Cursor.HAND_CURSOR));
+    btnVolver.setAlignmentX(Component.CENTER_ALIGNMENT);
+    btnVolver.addActionListener(e -> mostrarCanjePuntos());
+
+    panelExito.add(panelImagenContainer);
+    panelExito.add(Box.createVerticalStrut(25));
+    panelExito.add(lblTitulo);
+    panelExito.add(Box.createVerticalStrut(15));
+    panelExito.add(lblProducto);
+    panelExito.add(Box.createVerticalStrut(10));
+    panelExito.add(lblPuntos);
+    panelExito.add(Box.createVerticalStrut(10));
+    panelExito.add(lblRestantes);
+    panelExito.add(Box.createVerticalStrut(30));
+    panelExito.add(btnVolver);
+
+    panelContenido.add(panelExito);
+    panelContenido.revalidate();
+    panelContenido.repaint();
+}
     
     private void mostrarLogin() {
         mostrarPantallaLogin();
