@@ -15,7 +15,7 @@ public class CustomizationDialog extends JDialog {
         super(owner, "Personalizar: " + p.getNombre(), true);
         this.producto = p;
         initComponents();
-        setSize(450, 480); 
+        setSize(500, 500); 
         setLocationRelativeTo(owner);
         setResizable(false);
     }
@@ -91,7 +91,7 @@ public class CustomizationDialog extends JDialog {
 
         // 🛑 Lógica de EXCLUSIÓN
         if (nombreLower.contains("gomita") || nombreLower.contains("m&m")) {
-             lblOpcion.setText("🚫 Este producto no requiere personalización.");
+             lblOpcion.setText("?Este producto no requiere personalización.");
              optionsMap.put("Añadir", new String[]{"Añadir al carrito"});
         } 
         
@@ -167,7 +167,7 @@ public class CustomizationDialog extends JDialog {
             String groupName = entry.getKey();
             String[] options = entry.getValue();
             
-            JLabel lblGroup = new JLabel("⦿ " + groupName + ":");
+            JLabel lblGroup = new JLabel("" + groupName + ":");
             lblGroup.setFont(new Font("Arial", Font.BOLD, 14));
             lblGroup.setForeground(new Color(255, 180, 0)); 
             lblGroup.setBorder(BorderFactory.createEmptyBorder(10, 0, 5, 0));

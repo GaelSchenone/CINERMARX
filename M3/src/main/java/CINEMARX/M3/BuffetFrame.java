@@ -48,7 +48,7 @@ public class BuffetFrame extends JFrame {
 
     private void initComponents() {
         setTitle("Cinemar X - Buffet");
-        setSize(1200, 700);
+        setSize(1366, 768);
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setLocationRelativeTo(null);
 
