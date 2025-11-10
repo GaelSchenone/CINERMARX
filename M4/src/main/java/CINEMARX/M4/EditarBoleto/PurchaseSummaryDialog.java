@@ -229,8 +229,12 @@ public class PurchaseSummaryDialog extends JDialog {
         StyledButton cancelButton = new StyledButton("Cancelar", StyledButton.ButtonStyle.TOGGLE);
         cancelButton.addActionListener(e -> cancelTicket(ticket));
         
+        StyledButton viewButton = new StyledButton("VER", StyledButton.ButtonStyle.TOGGLE);
+        viewButton.addActionListener(e -> showTicketViewer(ticket));
+        
         buttonsPanel.add(reprogramButton);
         buttonsPanel.add(cancelButton);
+        buttonsPanel.add(viewButton);
         
         ticketsPanel.add(Box.createVerticalStrut(30));
         ticketsPanel.add(buttonsPanel);
@@ -266,6 +270,10 @@ public class PurchaseSummaryDialog extends JDialog {
             }
 
         }
+
+    private void showTicketViewer(TicketInfo ticket) {
+        new TicketViewer(this, ticket.idBoleto).setVisible(true);
+    }
 
     private void cancelTicket(TicketInfo ticket) {
         CustomDialog confirmDialog = new CustomDialog((Frame) getOwner(),

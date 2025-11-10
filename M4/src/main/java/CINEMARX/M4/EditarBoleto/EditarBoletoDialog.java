@@ -536,8 +536,8 @@ public class EditarBoletoDialog extends JDialog {
 
         if (nuevoAsiento != null) {
             String sql = "UPDATE Boleto SET ID_Funcion = ?, NumeroButaca = ? WHERE ID_Boleto = ?";
-            Connection conn = M4.getConexion();
-            try (PreparedStatement pstmt = conn.prepareStatement(sql)) {
+            try (Connection conn = M4.getConexion();
+                 PreparedStatement pstmt = conn.prepareStatement(sql)) {
                 pstmt.setInt(1, nuevaFuncionId);
                 pstmt.setString(2, nuevoAsiento);
                 pstmt.setInt(3, boletoId);

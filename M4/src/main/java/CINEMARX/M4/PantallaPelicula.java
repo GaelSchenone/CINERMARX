@@ -383,38 +383,97 @@ public class PantallaPelicula extends JPanel {
         });
     }
 
+    // Reemplaza el método crearPanelIzquierdo() en PantallaPelicula.java
+
     private JPanel crearPanelIzquierdo() {
         JPanel panel = new JPanel();
         panel.setLayout(new BoxLayout(panel, BoxLayout.Y_AXIS));
         panel.setBackground(new Color(0x2B2B2B));
         panel.setPreferredSize(new Dimension(300, 0));
         panel.setMaximumSize(new Dimension(300, Integer.MAX_VALUE));
-        
+
+        // Panel contenedor del poster con overlay de play
+        JPanel posterContainer = new JPanel() {
+            @Override
+            protected void paintComponent(Graphics g) {
+                super.paintComponent(g);
+                // Si hay trailer, dibujar overlay de play
+                if (trailerUrl != null && !trailerUrl.isEmpty()) {
+                    Graphics2D g2 = (Graphics2D) g.create();
+                    g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+
+                    // Fondo semi-transparente en hover
+                    if (getMousePosition() != null) {
+                        g2.setColor(new Color(0, 0, 0, 120));
+                        g2.fillRect(0, 0, getWidth(), getHeight());
+
+                        // Icono de play
+                        int centerX = getWidth() / 2;
+                        int centerY = getHeight() / 2;
+                        int size = 80;
+
+                        // Círculo blanco
+                        g2.setColor(new Color(255, 255, 255, 200));
+                        g2.fillOval(centerX - size/2, centerY - size/2, size, size);
+
+                        // Triángulo de play
+                        g2.setColor(new Color(220, 50, 50));
+                        int[] xPoints = {centerX - 15, centerX - 15, centerX + 20};
+                        int[] yPoints = {centerY - 20, centerY + 20, centerY};
+                        g2.fillPolygon(xPoints, yPoints, 3);
+                    }
+                    g2.dispose();
+                }
+            }
+        };
+        posterContainer.setLayout(new BorderLayout());
+        posterContainer.setPreferredSize(new Dimension(300, 450));
+        posterContainer.setMaximumSize(new Dimension(300, 450));
+        posterContainer.setMinimumSize(new Dimension(300, 450));
+        posterContainer.setBackground(new Color(50, 50, 50));
+        posterContainer.setOpaque(true);
+
         posterLabel = new JLabel();
-        posterLabel.setPreferredSize(new Dimension(300, 450));
-        posterLabel.setMaximumSize(new Dimension(300, 450));
-        posterLabel.setMinimumSize(new Dimension(300, 450));
         posterLabel.setBackground(new Color(50, 50, 50));
         posterLabel.setOpaque(true);
-        posterLabel.setAlignmentX(Component.LEFT_ALIGNMENT);
         posterLabel.setHorizontalAlignment(JLabel.CENTER);
         posterLabel.setVerticalAlignment(JLabel.CENTER);
-        posterLabel.setCursor(new Cursor(Cursor.HAND_CURSOR));
-        posterLabel.addMouseListener(new MouseAdapter() {
+
+        posterContainer.add(posterLabel, BorderLayout.CENTER);
+        posterContainer.setCursor(new Cursor(Cursor.HAND_CURSOR));
+
+        // Agregar efecto hover
+        posterContainer.addMouseListener(new MouseAdapter() {
+            @Override
+            public void mouseEntered(MouseEvent e) {
+                posterContainer.repaint();
+            }
+
+            @Override
+            public void mouseExited(MouseEvent e) {
+                posterContainer.repaint();
+            }
+
             @Override
             public void mouseClicked(MouseEvent e) {
-                if (trailerUrl != null && (trailerUrl.startsWith("http://") || trailerUrl.startsWith("https://"))) {
-                    VideoPlayerDialog player = new VideoPlayerDialog(M4.getMainFrame(), trailerUrl);
-                    player.setVisible(true);
+                if (trailerUrl != null && !trailerUrl.isEmpty() && 
+                    (trailerUrl.startsWith("http://") || trailerUrl.startsWith("https://"))) {
+                    try {
+                        VideoPlayerDialog.openVideo(M4.getMainFrame(), trailerUrl);
+                    } catch (Exception ex) {
+                        ex.printStackTrace();
+                        new CustomDialog(M4.getMainFrame(), "Error al abrir el reproductor: " + ex.getMessage()).setVisible(true);
+                    }
                 } else {
-                    new CustomDialog(M4.getMainFrame(), "Trailer no disponible o URL inválida").setVisible(true);
+                    new CustomDialog(M4.getMainFrame(), "Tráiler no disponible").setVisible(true);
                 }
             }
         });
-        panel.add(posterLabel);
-        
+
+        panel.add(posterContainer);
+
         panel.add(Box.createRigidArea(new Dimension(0, 20)));
-        
+
         sinopsisArea = new JTextArea();
         sinopsisArea.setLineWrap(true);
         sinopsisArea.setWrapStyleWord(true);
@@ -424,7 +483,7 @@ public class PantallaPelicula extends JPanel {
         sinopsisArea.setFont(new Font("Arial", Font.PLAIN, 13));
         sinopsisArea.setAlignmentX(Component.LEFT_ALIGNMENT);
         sinopsisArea.setBorder(null);
-        
+
         JScrollPane sinopsisScrollPane = new JScrollPane(sinopsisArea);
         sinopsisScrollPane.setBorder(null);
         sinopsisScrollPane.setOpaque(false);
@@ -433,18 +492,17 @@ public class PantallaPelicula extends JPanel {
         sinopsisScrollPane.setMaximumSize(new Dimension(300, 150));
         sinopsisScrollPane.setAlignmentX(Component.LEFT_ALIGNMENT);
         panel.add(sinopsisScrollPane);
-        
+
         panel.add(Box.createRigidArea(new Dimension(0, 20)));
-        
+
         duracionLabel = new JLabel();
         duracionLabel.setFont(new Font("Arial", Font.BOLD, 14));
         duracionLabel.setForeground(Color.WHITE);
         duracionLabel.setAlignmentX(Component.LEFT_ALIGNMENT);
         panel.add(duracionLabel);
-        
+
         return panel;
     }
-    
     private JPanel crearPanelDerecho() {
         JPanel panel = new JPanel();
         panel.setLayout(new BoxLayout(panel, BoxLayout.Y_AXIS));

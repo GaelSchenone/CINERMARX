@@ -36,7 +36,7 @@ set APP_HOME=%DIRNAME%..
 for %%i in ("%APP_HOME%") do set APP_HOME=%%~fi
 
 @rem Add default JVM options here. You can also use JAVA_OPTS and M4_OPTS to pass JVM options to this script.
-set DEFAULT_JVM_OPTS=
+set DEFAULT_JVM_OPTS="--enable-native-access=javafx.graphics,javafx.media,javafx.web" "--add-opens=javafx.web/com.sun.webkit=ALL-UNNAMED"
 
 @rem Find java.exe
 if defined JAVA_HOME goto findJavaFromJavaHome
@@ -70,7 +70,7 @@ goto fail
 :execute
 @rem Setup the command line
 
-set CLASSPATH=%APP_HOME%\lib\M4.jar;%APP_HOME%\lib\mariadb-java-client-3.5.6.jar;%APP_HOME%\lib\angus-mail-2.0.2.jar;%APP_HOME%\lib\jakarta.mail-api-2.1.2.jar;%APP_HOME%\lib\angus-activation-2.0.1.jar;%APP_HOME%\lib\jakarta.activation-api-2.1.2.jar
+set CLASSPATH=%APP_HOME%\lib\M4.jar;%APP_HOME%\lib\mariadb-java-client-3.5.6.jar;%APP_HOME%\lib\javafx-fxml-21-win.jar;%APP_HOME%\lib\javafx-web-21-win.jar;%APP_HOME%\lib\javafx-controls-21-win.jar;%APP_HOME%\lib\javafx-controls-21.jar;%APP_HOME%\lib\javafx-media-21-win.jar;%APP_HOME%\lib\javafx-media-21.jar;%APP_HOME%\lib\javafx-swing-21-win.jar;%APP_HOME%\lib\javafx-graphics-21-win.jar;%APP_HOME%\lib\javafx-graphics-21.jar;%APP_HOME%\lib\javafx-base-21-win.jar;%APP_HOME%\lib\javafx-base-21.jar;%APP_HOME%\lib\angus-mail-2.0.2.jar;%APP_HOME%\lib\jakarta.mail-api-2.1.2.jar;%APP_HOME%\lib\openhtmltopdf-pdfbox-1.0.10.jar;%APP_HOME%\lib\javase-3.5.2.jar;%APP_HOME%\lib\core-3.5.2.jar;%APP_HOME%\lib\angus-activation-2.0.1.jar;%APP_HOME%\lib\jakarta.activation-api-2.1.2.jar;%APP_HOME%\lib\graphics2d-0.32.jar;%APP_HOME%\lib\pdfbox-2.0.24.jar;%APP_HOME%\lib\xmpbox-2.0.24.jar;%APP_HOME%\lib\openhtmltopdf-core-1.0.10.jar;%APP_HOME%\lib\jcommander-1.82.jar;%APP_HOME%\lib\jai-imageio-core-1.4.0.jar;%APP_HOME%\lib\fontbox-2.0.24.jar;%APP_HOME%\lib\commons-logging-1.2.jar
 
 
 @rem Execute M4

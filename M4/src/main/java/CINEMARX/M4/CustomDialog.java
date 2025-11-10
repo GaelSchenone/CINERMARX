@@ -25,6 +25,19 @@ public class CustomDialog extends JDialog {
 
     public CustomDialog(Frame owner, String message, DialogType type) {
         super(owner, true);
+        init(owner, message, type);
+    }
+
+    public CustomDialog(Dialog owner, String message) {
+        this(owner, message, DialogType.INFO);
+    }
+
+    public CustomDialog(Dialog owner, String message, DialogType type) {
+        super(owner, true);
+        init(owner, message, type);
+    }
+    
+    private void init(Window owner, String message, DialogType type) {
         setUndecorated(true);
         setBackground(new Color(0, 0, 0, 0));
         setSize(400, 200);

@@ -5,6 +5,8 @@ import java.awt.*;
 import java.sql.*;
 import java.util.HashMap;
 import java.util.Map;
+import javafx.application.Platform;
+import javafx.embed.swing.JFXPanel;
 
 /**
  * Clase principal del sistema de Cine Cinemar X
@@ -20,6 +22,12 @@ public class M4 {
     private static OrderDetails orderDetails;
     
     public static void main(String[] args) {
+        // Inicializar JavaFX en el thread de Swing
+        SwingUtilities.invokeLater(() -> {
+            new JFXPanel(); // Esto inicializa el toolkit de JavaFX
+            Platform.setImplicitExit(false); // Evita que JavaFX cierre la aplicación
+        });
+        
         try {
             UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
             
@@ -143,6 +151,7 @@ public class M4 {
     static {
         Runtime.getRuntime().addShutdownHook(new Thread(() -> {
             cerrarConexion();
+            Platform.exit(); // Cerrar JavaFX al salir
         }));
     }
 }

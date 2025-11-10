@@ -1,6 +1,7 @@
 package CINEMARX.M4;
 
 public class Boleto {
+    private int idBoleto;
     private String numeroButaca;
     private int idFuncion;
     private Integer idCliente;
@@ -9,6 +10,14 @@ public class Boleto {
         this.numeroButaca = numeroButaca;
         this.idFuncion = idFuncion;
         this.idCliente = idCliente;
+    }
+
+    public int getIdBoleto() {
+        return idBoleto;
+    }
+
+    public void setIdBoleto(int idBoleto) {
+        this.idBoleto = idBoleto;
     }
 
     public String getNumeroButaca() {

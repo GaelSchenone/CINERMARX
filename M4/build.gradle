@@ -1,3 +1,4 @@
+
 plugins {
     id 'java'
     id 'application'
@@ -8,7 +9,10 @@ description = 'M4'
 
 application {
     mainClass = 'CINEMARX.M4.M4'
-    applicationDefaultJvmArgs = ["--enable-native-access=javafx.graphics,javafx.media"]
+    applicationDefaultJvmArgs = [
+        "--enable-native-access=javafx.graphics,javafx.media,javafx.web",
+        "--add-opens=javafx.web/com.sun.webkit=ALL-UNNAMED"
+    ]
 }
 
 repositories {
@@ -16,16 +20,18 @@ repositories {
 }
 
 javafx {
-    version = "17.0.2"
-    modules = [ 'javafx.controls', 'javafx.fxml', 'javafx.swing', 'javafx.media' ]
+    version = "21" // Cambiado a versi├│n 21 para consistencia
+    modules = [ 'javafx.controls', 'javafx.fxml', 'javafx.swing', 'javafx.media', 'javafx.web' ] // Agregado javafx.web
 }
 
 dependencies {
     implementation files('../M4/libs/mariadb-java-client-3.5.6.jar')
     implementation 'jakarta.mail:jakarta.mail-api:2.1.2'
     implementation 'org.eclipse.angus:angus-mail:2.0.2'
-    implementation 'org.openjfx:javafx-swing:17.0.2'
-    implementation 'org.openjfx:javafx-media:17.0.2'
+    implementation 'com.openhtmltopdf:openhtmltopdf-pdfbox:1.0.10'
+    // No necesitas declarar JavaFX manualmente porque el plugin lo maneja
+    implementation 'com.google.zxing:core:3.5.2'
+    implementation 'com.google.zxing:javase:3.5.2'
 }
 
 java {
