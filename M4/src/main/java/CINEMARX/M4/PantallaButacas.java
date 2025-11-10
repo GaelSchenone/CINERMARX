@@ -23,79 +23,6 @@ public class PantallaButacas extends JPanel {
     private Set<ButacaBoton> butacasSeleccionadas;
     private JPanel panelButacas;
     
-    class ButacaBoton extends JButton {
-        String id;
-        boolean ocupada;
-        boolean isSelected;
-        private Color currentBackgroundColor;
-
-        ButacaBoton(String id) {
-            this.id = id;
-            this.ocupada = false;
-            this.isSelected = false;
-            configurarEstilo();
-        }
-
-        void configurarEstilo() {
-            setPreferredSize(new Dimension(18, 18));
-            setFont(new Font("Arial", Font.BOLD, 9));
-            setFocusPainted(false);
-            setBorderPainted(false);
-            setContentAreaFilled(false);
-            setCursor(new Cursor(Cursor.HAND_CURSOR));
-
-            if (ocupada) {
-                currentBackgroundColor = new Color(100, 100, 100);
-                setForeground(new Color(60, 60, 60));
-                setEnabled(false);
-            } else {
-                currentBackgroundColor = Color.WHITE;
-                setForeground(new Color(50, 50, 50));
-            }
-        }
-
-        void seleccionar() {
-            currentBackgroundColor = new Color(220, 50, 50);
-            setForeground(Color.WHITE);
-            isSelected = true;
-            repaint();
-        }
-
-        void deseleccionar() {
-            if (!ocupada) {
-                currentBackgroundColor = Color.WHITE;
-                setForeground(new Color(50, 50, 50));
-                isSelected = false;
-                repaint();
-            }
-        }
-
-        @Override
-        protected void paintComponent(Graphics g) {
-            Graphics2D g2 = (Graphics2D) g.create();
-            g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-            g2.setRenderingHint(RenderingHints.KEY_STROKE_CONTROL, RenderingHints.VALUE_STROKE_PURE);
-
-            g2.setColor(currentBackgroundColor);
-            g2.fillRoundRect(0, 0, getWidth(), getHeight(), 10, 10);
-
-            super.paintComponent(g);
-
-            if (isSelected) {
-                g2.setColor(new Color(0x6C0002));
-                g2.setStroke(new BasicStroke(2));
-
-                int w = getWidth();
-                int h = getHeight();
-
-                g2.drawLine(w / 4, h / 2, w / 2, h * 3 / 4);
-                g2.drawLine(w / 2, h * 3 / 4, w * 3 / 4, h / 4);
-            }
-            
-            g2.dispose();
-        }
-    }
-    
     public PantallaButacas(int idFuncion, int idSala, int idPelicula) {
         this.idFuncion = idFuncion;
         this.idSala = idSala;
@@ -148,12 +75,14 @@ public class PantallaButacas extends JPanel {
         try {
             String sql = "SELECT NumeroButaca FROM Boleto WHERE ID_Funcion = ?";
             
-            PreparedStatement ps = M4.getConexion().prepareStatement(sql);
-            ps.setInt(1, idFuncion);
-            ResultSet rs = ps.executeQuery();
-            
-            while (rs.next()) {
-                butacasOcupadas.add(rs.getString("NumeroButaca"));
+            Connection conn = M4.getConexion();
+            try (PreparedStatement ps = conn.prepareStatement(sql)) {
+                ps.setInt(1, idFuncion);
+                ResultSet rs = ps.executeQuery();
+                
+                while (rs.next()) {
+                    butacasOcupadas.add(rs.getString("NumeroButaca"));
+                }
             }
             
         } catch (SQLException e) {
@@ -164,12 +93,14 @@ public class PantallaButacas extends JPanel {
     private void cargarCantButacas() {
         try {
             String sql = "SELECT CantButacas FROM Sala WHERE ID_Sala = ?";
-            PreparedStatement ps = M4.getConexion().prepareStatement(sql);
-            ps.setInt(1, idSala);
-            ResultSet rs = ps.executeQuery();
-            
-            if (rs.next()) {
-                cantButacas = rs.getInt("CantButacas");
+            Connection conn = M4.getConexion();
+            try (PreparedStatement ps = conn.prepareStatement(sql)) {
+                ps.setInt(1, idSala);
+                ResultSet rs = ps.executeQuery();
+                
+                if (rs.next()) {
+                    cantButacas = rs.getInt("CantButacas");
+                }
             }
             
         } catch (SQLException e) {
@@ -183,7 +114,7 @@ public class PantallaButacas extends JPanel {
         scrollableContent.setBorder(new EmptyBorder(30, 50, 30, 50));
 
         // Top panel with back button and title
-        JPanel topPanel = new JPanel(new BorderLayout());
+        JPanel topPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 10, 0));
         topPanel.setOpaque(false);
 
         // Back button
@@ -203,7 +134,7 @@ public class PantallaButacas extends JPanel {
                         M4.mostrarPantallaPelicula(idPelicula);
                     }
                 });
-                topPanel.add(backButton, BorderLayout.WEST);
+                topPanel.add(backButton);
             }
         } catch (Exception e) {
             // Fallback text button
@@ -212,14 +143,15 @@ public class PantallaButacas extends JPanel {
             backButton.setForeground(Color.WHITE);
             backButton.setCursor(new Cursor(Cursor.HAND_CURSOR));
             backButton.addActionListener(e2 -> M4.mostrarPantallaPelicula(idPelicula));
-            topPanel.add(backButton, BorderLayout.WEST);
+            topPanel.add(backButton);
         }
 
         // Título
-        JLabel titulo = new JLabel("Selecciona tu butaca", JLabel.CENTER);
+        JLabel titulo = new JLabel("Selecciona tu butaca");
         titulo.setFont(new Font("Arial", Font.BOLD, 28));
         titulo.setForeground(Color.WHITE);
-        topPanel.add(titulo, BorderLayout.CENTER);
+        titulo.setBorder(new EmptyBorder(0, 10, 0, 0));
+        topPanel.add(titulo);
 
         scrollableContent.add(topPanel, BorderLayout.NORTH);
 
@@ -349,16 +281,13 @@ public class PantallaButacas extends JPanel {
         ButacaBoton btn = new ButacaBoton(id);
         
         if (butacasOcupadas.contains(id)) {
-            btn.ocupada = true;
-            btn.configurarEstilo();
+            btn.setOcupada(true);
         } else {
             btn.addActionListener(e -> {
-                if (butacasSeleccionadas.contains(btn)) {
-                    butacasSeleccionadas.remove(btn);
-                    btn.deseleccionar();
-                } else {
+                if (btn.isSelected()) {
                     butacasSeleccionadas.add(btn);
-                    btn.seleccionar();
+                } else {
+                    butacasSeleccionadas.remove(btn);
                 }
             });
         }
@@ -477,7 +406,7 @@ public class PantallaButacas extends JPanel {
     private void guardarButacasEnOrden() {
         OrderDetails order = M4.getOrderDetails(idFuncion);
         for (ButacaBoton btn : butacasSeleccionadas) {
-            Boleto boleto = new Boleto(btn.id, idFuncion, null);
+            Boleto boleto = new Boleto(btn.getSeatId(), idFuncion, null);
             order.addBoleto(boleto);
         }
 

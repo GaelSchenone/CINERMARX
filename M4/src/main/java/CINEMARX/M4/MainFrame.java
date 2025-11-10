@@ -20,7 +20,7 @@ public class MainFrame extends JFrame {
     private HeaderPanel headerPanel;
     private CardLayout cardLayout;
     private HashSet<String> addedPanels = new HashSet<>();
-    private LoadingPanel loadingPanel;
+    private PantallaPeliculaPlaceholder placeholderPanel;
     
     public MainFrame() {
         setTitle("CINEMAR X");
@@ -45,8 +45,8 @@ public class MainFrame extends JFrame {
         contentPanel.setBackground(new Color(0x2B2B2B));
         
         // Panel de carga
-        loadingPanel = new LoadingPanel();
-        contentPanel.add(loadingPanel, "loading");
+        placeholderPanel = new PantallaPeliculaPlaceholder();
+        contentPanel.add(placeholderPanel, "loading");
         
         mainPanel.add(contentPanel, BorderLayout.CENTER);
         

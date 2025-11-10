@@ -11,6 +11,7 @@ import javax.imageio.ImageIO;
 import java.net.URL;
 import java.awt.image.BufferedImage;
 import java.io.InputStream;
+import java.net.URI;
 
 /**
  * Panel de película (sin JFrame, solo el contenido)
@@ -32,6 +33,7 @@ public class PantallaPelicula extends JPanel {
     private String selectedIdioma;
     private String selectedFormato;
     private JPanel panelTarjetasPeliculas;
+    private String trailerUrl;
     
     class FuncionInfo {
         int idFuncion;
@@ -46,50 +48,73 @@ public class PantallaPelicula extends JPanel {
     }
 
     class PeliculaCard extends JPanel {
-        public PeliculaCard(int peliculaId, String titulo, String urlImagen, String clasificacionEdad) {
-            setOpaque(false);
-            setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
-            setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
-            setCursor(new Cursor(Cursor.HAND_CURSOR));
-            setPreferredSize(new Dimension(150, 270));
-            setMinimumSize(new Dimension(150, 270));
-            setMaximumSize(new Dimension(150, 270));
+        public PeliculaCard(boolean isPlaceholder) {
+            init();
+            if (isPlaceholder) {
+                setBorder(null);
+                JLabel posterLabel = new JLabel();
+                posterLabel.setOpaque(true);
+                posterLabel.setBackground(new Color(50, 50, 50));
+                posterLabel.setAlignmentX(Component.LEFT_ALIGNMENT);
+                posterLabel.setPreferredSize(new Dimension(180, 260));
+                add(posterLabel);
+            }
+        }
 
+        public PeliculaCard(int peliculaId, String titulo, String urlImagen, String clasificacionEdad) {
+            init();
+            
             JLabel posterLabel = new JLabel();
             posterLabel.setAlignmentX(Component.LEFT_ALIGNMENT);
-            posterLabel.setPreferredSize(new Dimension(130, 195));
+            posterLabel.setPreferredSize(new Dimension(180, 260));
 
             try {
                 URL imageUrl = new URL(urlImagen);
-                InputStream in = imageUrl.openStream();
-                BufferedImage originalImage = ImageIO.read(in);
-                in.close();
-                if (originalImage != null) {
-                    Image scaledImage = originalImage.getScaledInstance(130, 195, Image.SCALE_SMOOTH);
-                    posterLabel.setIcon(new ImageIcon(scaledImage));
-                } else {
-                    posterLabel.setText("No Poster");
+                try (InputStream in = imageUrl.openStream();
+                     java.io.ByteArrayOutputStream baos = new java.io.ByteArrayOutputStream()) {
+
+                    byte[] buffer = new byte[4096];
+                    int bytesRead;
+                    while ((bytesRead = in.read(buffer)) != -1) {
+                        baos.write(buffer, 0, bytesRead);
+                    }
+                    
+                    try (java.io.ByteArrayInputStream bais = new java.io.ByteArrayInputStream(baos.toByteArray())) {
+                        BufferedImage originalImage = ImageIO.read(bais);
+                        if (originalImage != null) {
+                            Image scaledImage = originalImage.getScaledInstance(180, 260, Image.SCALE_SMOOTH);
+                            posterLabel.setIcon(new ImageIcon(scaledImage));
+                        } else {
+                            posterLabel.setText("No Poster");
+                        }
+                    }
                 }
             } catch (Exception e) {
                 posterLabel.setText("No Poster");
                 e.printStackTrace();
             }
 
-            JLabel tituloLabel = new JLabel("<html><body style='width: 120px;'>" + titulo + "</body></html>");
+            JLabel tituloLabel = new JLabel("<html><body style='width: 160px;'>" + titulo + "</body></html>");
             tituloLabel.setForeground(Color.WHITE);
             tituloLabel.setFont(new Font("Arial", Font.BOLD, 12));
             tituloLabel.setAlignmentX(Component.LEFT_ALIGNMENT);
 
             JLabel clasificacionLabel = new JLabel(clasificacionEdad);
             clasificacionLabel.setForeground(Color.LIGHT_GRAY);
-            clasificacionLabel.setFont(new Font("Arial", Font.PLAIN, 11));
+            clasificacionLabel.setFont(new Font("Arial", Font.PLAIN, 10));
             clasificacionLabel.setAlignmentX(Component.LEFT_ALIGNMENT);
+
+            JPanel textPanel = new JPanel();
+            textPanel.setOpaque(false);
+            textPanel.setLayout(new BoxLayout(textPanel, BoxLayout.Y_AXIS));
+            textPanel.setBorder(new EmptyBorder(0, 10, 0, 10));
+            textPanel.add(tituloLabel);
+            textPanel.add(Box.createRigidArea(new Dimension(0, 5)));
+            textPanel.add(clasificacionLabel);
 
             add(posterLabel);
             add(Box.createRigidArea(new Dimension(0, 10)));
-            add(tituloLabel);
-            add(Box.createRigidArea(new Dimension(0, 5)));
-            add(clasificacionLabel);
+            add(textPanel);
 
             addMouseListener(new MouseAdapter() {
                 @Override
@@ -97,6 +122,16 @@ public class PantallaPelicula extends JPanel {
                     M4.mostrarPantallaPelicula(peliculaId);
                 }
             });
+        }
+
+        private void init() {
+            setOpaque(false);
+            setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
+            setBorder(BorderFactory.createLineBorder(CinemarxTheme.BORDER_COLOR, 1));
+            setCursor(new Cursor(Cursor.HAND_CURSOR));
+            setPreferredSize(new Dimension(180, 320));
+            setMinimumSize(new Dimension(180, 320));
+            setMaximumSize(new Dimension(180, 320));
         }
 
         @Override
@@ -124,13 +159,15 @@ public class PantallaPelicula extends JPanel {
         this.idPelicula = idPelicula;
 
         new SwingWorker<Void, Void>() {
-            private String tituloPelicula, sinopsisPelicula, duracionPelicula, posterUrl;
+            private String tituloPelicula, sinopsisPelicula, duracionPelicula, posterUrl, trailerUrlWorker;
             private BufferedImage posterImage;
 
             @Override
             protected Void doInBackground() throws Exception {
-                String sql = "SELECT Titulo, Sinopsis, Duracion, Imagen FROM Pelicula WHERE ID_Pelicula = ?";
-                try (PreparedStatement ps = M4.getConexion().prepareStatement(sql)) {
+                cargarOtrasPeliculas();
+                String sql = "SELECT Titulo, Sinopsis, Duracion, Imagen, Trailer FROM Pelicula WHERE ID_Pelicula = ?";
+                Connection conn = M4.getConexion();
+                try (PreparedStatement ps = conn.prepareStatement(sql)) {
                     ps.setInt(1, idPelicula);
                     try (ResultSet rs = ps.executeQuery()) {
                         if (rs.next()) {
@@ -139,8 +176,9 @@ public class PantallaPelicula extends JPanel {
                             int duracionMinutos = rs.getInt("Duracion");
                             int horas = duracionMinutos / 60;
                             int minutos = duracionMinutos % 60;
-                            duracionPelicula = "DURACIÓN: " + String.format("%dh %dm", horas, minutos);
+                            duracionPelicula = "DURACIÓN: " + String.format("%02d:%02d", horas, minutos);
                             posterUrl = rs.getString("Imagen");
+                            trailerUrlWorker = rs.getString("Trailer");
                         }
                     }
                 }
@@ -156,7 +194,6 @@ public class PantallaPelicula extends JPanel {
                     }
                 }
                 
-                cargarOtrasPeliculas();
                 return null;
             }
 
@@ -167,6 +204,7 @@ public class PantallaPelicula extends JPanel {
                     titulo.setText(tituloPelicula);
                     sinopsisArea.setText(sinopsisPelicula);
                     duracionLabel.setText(duracionPelicula);
+                    trailerUrl = trailerUrlWorker;
 
                     if (posterImage != null) {
                         int newWidth = 300;
@@ -234,7 +272,7 @@ public class PantallaPelicula extends JPanel {
         JPanel panel = new JPanel(new BorderLayout());
         panel.setBackground(new Color(0x2B2B2B));
         panel.setBorder(new EmptyBorder(15, 0, 15, 0));
-        panel.setMaximumSize(new Dimension(Integer.MAX_VALUE, 350));
+        panel.setMaximumSize(new Dimension(Integer.MAX_VALUE, 400));
 
         JLabel titulo = new JLabel("PELICULAS EN CARTELERA");
         titulo.setFont(new Font("Arial", Font.BOLD, 16));
@@ -246,16 +284,62 @@ public class PantallaPelicula extends JPanel {
         panelTarjetasPeliculas.setLayout(new BoxLayout(panelTarjetasPeliculas, BoxLayout.X_AXIS));
         panelTarjetasPeliculas.setBackground(new Color(0x2B2B2B));
 
+        for (int i = 0; i < 10; i++) {
+            panelTarjetasPeliculas.add(new PeliculaCard(true));
+            panelTarjetasPeliculas.add(Box.createRigidArea(new Dimension(15, 0)));
+        }
+
         JScrollPane scrollPane = new JScrollPane(panelTarjetasPeliculas);
         scrollPane.setBorder(null);
         scrollPane.setHorizontalScrollBarPolicy(JScrollPane.HORIZONTAL_SCROLLBAR_ALWAYS);
         scrollPane.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_NEVER);
         scrollPane.getHorizontalScrollBar().setUnitIncrement(20);
-        scrollPane.setPreferredSize(new Dimension(0, 300));
-        personalizarScrollBar(scrollPane.getHorizontalScrollBar());
+        scrollPane.setPreferredSize(new Dimension(0, 350));
+        personalizarScrollBarOculto(scrollPane.getHorizontalScrollBar());
 
         panel.add(scrollPane, BorderLayout.CENTER);
         return panel;
+    }
+    
+    private void personalizarScrollBarOculto(JScrollBar scrollBar) {
+        scrollBar.setUI(new javax.swing.plaf.basic.BasicScrollBarUI() {
+            @Override
+            protected void configureScrollBarColors() {
+                this.thumbColor = new Color(0x2B2B2B);
+                this.trackColor = new Color(0x2B2B2B);
+            }
+            
+            @Override
+            protected JButton createDecreaseButton(int orientation) {
+                JButton button = new JButton();
+                button.setPreferredSize(new Dimension(0, 0));
+                return button;
+            }
+            
+            @Override
+            protected JButton createIncreaseButton(int orientation) {
+                JButton button = new JButton();
+                button.setPreferredSize(new Dimension(0, 0));
+                return button;
+            }
+            
+            @Override
+            protected void paintThumb(Graphics g, JComponent c, Rectangle thumbBounds) {
+                Graphics2D g2 = (Graphics2D) g.create();
+                g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+                g2.setColor(thumbColor);
+                g2.fillRoundRect(thumbBounds.x, thumbBounds.y, thumbBounds.width, thumbBounds.height, 10, 10);
+                g2.dispose();
+            }
+            
+            @Override
+            protected void paintTrack(Graphics g, JComponent c, Rectangle trackBounds) {
+                Graphics2D g2 = (Graphics2D) g.create();
+                g2.setColor(trackColor);
+                g2.fillRect(trackBounds.x, trackBounds.y, trackBounds.width, trackBounds.height);
+                g2.dispose();
+            }
+        });
     }
     
     private void personalizarScrollBar(JScrollBar scrollBar) {
@@ -315,6 +399,18 @@ public class PantallaPelicula extends JPanel {
         posterLabel.setAlignmentX(Component.LEFT_ALIGNMENT);
         posterLabel.setHorizontalAlignment(JLabel.CENTER);
         posterLabel.setVerticalAlignment(JLabel.CENTER);
+        posterLabel.setCursor(new Cursor(Cursor.HAND_CURSOR));
+        posterLabel.addMouseListener(new MouseAdapter() {
+            @Override
+            public void mouseClicked(MouseEvent e) {
+                if (trailerUrl != null && !trailerUrl.isEmpty()) {
+                    VideoPlayerDialog player = new VideoPlayerDialog(M4.getMainFrame(), trailerUrl);
+                    player.setVisible(true);
+                } else {
+                    new CustomDialog(M4.getMainFrame(), "Trailer no disponible").setVisible(true);
+                }
+            }
+        });
         panel.add(posterLabel);
         
         panel.add(Box.createRigidArea(new Dimension(0, 20)));
@@ -329,13 +425,14 @@ public class PantallaPelicula extends JPanel {
         sinopsisArea.setAlignmentX(Component.LEFT_ALIGNMENT);
         sinopsisArea.setBorder(null);
         
-        JPanel sinopsisPanel = new JPanel(new BorderLayout());
-        sinopsisPanel.setBackground(new Color(0x2B2B2B));
-        sinopsisPanel.setPreferredSize(new Dimension(300, 150));
-        sinopsisPanel.setMaximumSize(new Dimension(300, 150));
-        sinopsisPanel.setAlignmentX(Component.LEFT_ALIGNMENT);
-        sinopsisPanel.add(sinopsisArea, BorderLayout.CENTER);
-        panel.add(sinopsisPanel);
+        JScrollPane sinopsisScrollPane = new JScrollPane(sinopsisArea);
+        sinopsisScrollPane.setBorder(null);
+        sinopsisScrollPane.setOpaque(false);
+        sinopsisScrollPane.getViewport().setOpaque(false);
+        sinopsisScrollPane.setPreferredSize(new Dimension(300, 150));
+        sinopsisScrollPane.setMaximumSize(new Dimension(300, 150));
+        sinopsisScrollPane.setAlignmentX(Component.LEFT_ALIGNMENT);
+        panel.add(sinopsisScrollPane);
         
         panel.add(Box.createRigidArea(new Dimension(0, 20)));
         
@@ -547,7 +644,8 @@ public class PantallaPelicula extends JPanel {
             protected java.util.Map<java.util.Date, java.util.List<String>> doInBackground() throws Exception {
                 java.util.Map<java.util.Date, java.util.List<String>> fechas = new LinkedHashMap<>();
                 String sql = "SELECT DISTINCT FechaFuncion FROM Funcion WHERE ID_Pelicula = ? ORDER BY FechaFuncion";
-                try (PreparedStatement ps = M4.getConexion().prepareStatement(sql)) {
+                Connection conn = M4.getConexion();
+                try (PreparedStatement ps = conn.prepareStatement(sql)) {
                     ps.setInt(1, idPelicula);
                     try (ResultSet rs = ps.executeQuery()) {
                         while (rs.next()) {
@@ -618,7 +716,8 @@ public class PantallaPelicula extends JPanel {
 
                 sqlBuilder.append(" ORDER BY f.HoraFuncion");
 
-                try (PreparedStatement ps = M4.getConexion().prepareStatement(sqlBuilder.toString())) {
+                Connection conn = M4.getConexion();
+                try (PreparedStatement ps = conn.prepareStatement(sqlBuilder.toString())) {
                     for (int i = 0; i < params.size(); i++) {
                         ps.setObject(i + 1, params.get(i));
                     }
@@ -674,7 +773,8 @@ public class PantallaPelicula extends JPanel {
                 filtros.put("formatos", new ArrayList<>());
 
                 String sqlLang = "SELECT DISTINCT Idioma FROM Funcion WHERE ID_Pelicula = ? AND FechaFuncion = ?";
-                try (PreparedStatement psLang = M4.getConexion().prepareStatement(sqlLang)) {
+                Connection conn = M4.getConexion();
+                try (PreparedStatement psLang = conn.prepareStatement(sqlLang)) {
                     psLang.setInt(1, idPelicula);
                     psLang.setDate(2, new java.sql.Date(fecha.getTime()));
                     try (ResultSet rsLang = psLang.executeQuery()) {
@@ -685,7 +785,8 @@ public class PantallaPelicula extends JPanel {
                 }
 
                 String sqlFormat = "SELECT DISTINCT s.TipoDeSala FROM Sala s INNER JOIN Funcion f ON s.ID_Sala = f.ID_Sala WHERE f.ID_Pelicula = ? AND f.FechaFuncion = ?";
-                try (PreparedStatement psFormat = M4.getConexion().prepareStatement(sqlFormat)) {
+                Connection conn2 = M4.getConexion();
+                try (PreparedStatement psFormat = conn2.prepareStatement(sqlFormat)) {
                     psFormat.setInt(1, idPelicula);
                     psFormat.setDate(2, new java.sql.Date(fecha.getTime()));
                     try (ResultSet rsFormat = psFormat.executeQuery()) {
@@ -739,10 +840,45 @@ public class PantallaPelicula extends JPanel {
         new SwingWorker<java.util.List<PeliculaCard>, Void>() {
             @Override
             protected java.util.List<PeliculaCard> doInBackground() throws Exception {
-                java.util.List<PeliculaCard> cards = new ArrayList<>();
-                String sql = "SELECT ID_Pelicula, Titulo, Imagen, ClasificacionEdad FROM Pelicula WHERE ID_Pelicula != ? ORDER BY RAND()";
-                try (PreparedStatement ps = M4.getConexion().prepareStatement(sql)) {
+                java.util.List<PeliculaCard> cards = new java.util.ArrayList<>();
+                Connection conn = M4.getConexion();
+
+                // 1. Fetch all IDs
+                java.util.List<Integer> allIds = new java.util.ArrayList<>();
+                String sqlIds = "SELECT ID_Pelicula FROM Pelicula WHERE ID_Pelicula != ?";
+                try (PreparedStatement ps = conn.prepareStatement(sqlIds)) {
                     ps.setInt(1, idPelicula);
+                    try (ResultSet rs = ps.executeQuery()) {
+                        while (rs.next()) {
+                            allIds.add(rs.getInt("ID_Pelicula"));
+                        }
+                    }
+                }
+
+                // 2. Shuffle in Java
+                java.util.Collections.shuffle(allIds);
+
+                // 3. Get a subset
+                java.util.List<Integer> randomIds = allIds.subList(0, Math.min(10, allIds.size()));
+
+                if (randomIds.isEmpty()) {
+                    return cards;
+                }
+
+                // 4. Fetch details for the subset
+                StringBuilder sqlDetails = new StringBuilder("SELECT ID_Pelicula, Titulo, Imagen, ClasificacionEdad FROM Pelicula WHERE ID_Pelicula IN (");
+                for (int i = 0; i < randomIds.size(); i++) {
+                    sqlDetails.append("?");
+                    if (i < randomIds.size() - 1) {
+                        sqlDetails.append(",");
+                    }
+                }
+                sqlDetails.append(")");
+
+                try (PreparedStatement ps = conn.prepareStatement(sqlDetails.toString())) {
+                    for (int i = 0; i < randomIds.size(); i++) {
+                        ps.setInt(i + 1, randomIds.get(i));
+                    }
                     try (ResultSet rs = ps.executeQuery()) {
                         while (rs.next()) {
                             PeliculaCard card = new PeliculaCard(
