@@ -403,11 +403,11 @@ public class PantallaPelicula extends JPanel {
         posterLabel.addMouseListener(new MouseAdapter() {
             @Override
             public void mouseClicked(MouseEvent e) {
-                if (trailerUrl != null && !trailerUrl.isEmpty()) {
+                if (trailerUrl != null && (trailerUrl.startsWith("http://") || trailerUrl.startsWith("https://"))) {
                     VideoPlayerDialog player = new VideoPlayerDialog(M4.getMainFrame(), trailerUrl);
                     player.setVisible(true);
                 } else {
-                    new CustomDialog(M4.getMainFrame(), "Trailer no disponible").setVisible(true);
+                    new CustomDialog(M4.getMainFrame(), "Trailer no disponible o URL inválida").setVisible(true);
                 }
             }
         });

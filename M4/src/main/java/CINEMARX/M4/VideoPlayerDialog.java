@@ -112,9 +112,14 @@ public class VideoPlayerDialog extends JDialog {
                 });
 
                 mediaPlayer.setOnError(() -> {
-                    System.err.println("MediaPlayer Error: " + mediaPlayer.getError());
+                    Throwable error = mediaPlayer.getError();
+                    System.err.println("MediaPlayer Error: " + error);
                     SwingUtilities.invokeLater(() -> {
-                        JOptionPane.showMessageDialog(this, "Error en la reproducción del video: " + mediaPlayer.getError(), "Error", JOptionPane.ERROR_MESSAGE);
+                        String errorMessage = "Error en la reproducción del video.";
+                        if (error != null) {
+                            errorMessage += "\nDetalles: " + error.getMessage();
+                        }
+                        JOptionPane.showMessageDialog(this, errorMessage, "Error", JOptionPane.ERROR_MESSAGE);
                         dispose();
                     });
                 });

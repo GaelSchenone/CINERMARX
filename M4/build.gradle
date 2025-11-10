@@ -1,22 +1,31 @@
 plugins {
     id 'java'
     id 'application'
+    id 'org.openjfx.javafxplugin' version '0.0.13'
 }
 
 description = 'M4'
 
 application {
-    mainClass = 'CINEMARX.M4.EditarEntradas.HistorialComprasExample'
+    mainClass = 'CINEMARX.M4.M4'
+    applicationDefaultJvmArgs = ["--enable-native-access=javafx.graphics,javafx.media"]
 }
 
 repositories {
     mavenCentral()
 }
 
+javafx {
+    version = "17.0.2"
+    modules = [ 'javafx.controls', 'javafx.fxml', 'javafx.swing', 'javafx.media' ]
+}
+
 dependencies {
     implementation files('../M4/libs/mariadb-java-client-3.5.6.jar')
     implementation 'jakarta.mail:jakarta.mail-api:2.1.2'
     implementation 'org.eclipse.angus:angus-mail:2.0.2'
+    implementation 'org.openjfx:javafx-swing:17.0.2'
+    implementation 'org.openjfx:javafx-media:17.0.2'
 }
 
 java {
